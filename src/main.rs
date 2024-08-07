@@ -97,14 +97,25 @@ impl Dataframe {
         }
     }
 
+    pub fn from_csv() {} // TODO
+    pub fn to_csv() {} // TODO
+
     pub fn add_col<T>(&mut self, name: String, set: Vec<T>) -> Result<(), MyErr>
     where
         T: ToCell,
     {
-        if self.columns.len() > 0 && self.columns[0].values.len() != set.len() {
+        let l = self.length();
+        if l != 0 && l != set.len() {
             return Err(MyErr {
                 reason: String::from("Invalid col length"),
             });
+        }
+        for col in self.columns.iter() {
+            if col.name == name {
+                return Err(MyErr {
+                    reason: String::from("Col names must be unique"),
+                });
+            }
         }
         self.columns.push(Col::new(name, set));
         Ok(())
@@ -132,18 +143,28 @@ impl Dataframe {
         Ok(())
     }
 
-    pub fn filter<T>(&mut self, exp: Exp<T>)
+    pub fn filter<T>(&mut self, exp: Exp<T>) -> Result<Self, MyErr>
     where
         T: ToCell,
     {
-        // filter df by exp against col
-    }
+        let filter_col = match self.columns.iter().find(|col| col.name == exp.target) {
+            Some(col) => col,
+            None => {
+                return Err(MyErr {
+                    reason: "Target not found".to_string(),
+                })
+            }
+        };
 
-    pub fn slice<T>(&mut self, start: usize, stop: usize) -> Self
-    where
-        T: ToCell,
-    {
-        Dataframe {
+        let filter_set: Vec<bool> = filter_col
+            .values
+            .iter()
+            .map(|val| match exp {
+                _ => true, // TODO
+            })
+            .collect();
+
+        Ok(Dataframe {
             title: self.title.clone(),
             columns: self
                 .columns
@@ -155,12 +176,42 @@ impl Dataframe {
                         .values
                         .iter()
                         .enumerate()
-                        .filter(|(i, _)| *i >= start && *i < stop) // Should short circuit
-                        .map(|tup| tup.1.clone())
+                        .filter(|(i, _)| filter_set[*i])
+                        .map(|(_, c)| c.clone())
                         .collect(),
                 })
                 .collect(),
+        })
+    }
+
+    pub fn slice<T>(&mut self, start: usize, stop: usize) -> Result<Self, MyErr>
+    where
+        T: ToCell,
+    {
+        if start >= stop || stop > self.length() {
+            return Err(MyErr {
+                reason: "Invalid slice params".to_string(),
+            });
         }
+        Ok(Dataframe {
+            title: self.title.clone(),
+            columns: self
+                .columns
+                .iter()
+                .map(|col| Col {
+                    name: col.name.clone(),
+                    typed: col.typed.clone(),
+                    values: col.values[start..stop].to_vec(),
+                })
+                .collect(),
+        })
+    }
+
+    fn length(&self) -> usize {
+        if self.columns.len() == 0 {
+            return 0;
+        }
+        self.columns[0].values.len()
     }
 
     pub fn display(&self) {
