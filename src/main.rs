@@ -43,6 +43,15 @@ impl ToCell for u32 {
     }
 }
 
+impl ToCell for i32 {
+    fn to_cell(self) -> Cell {
+        Cell::Int(self.into())
+    }
+    fn ref_to_cell(&self) -> Cell {
+        Cell::Int(self.clone().into())
+    }
+}
+
 impl ToCell for i64 {
     fn to_cell(self) -> Cell {
         Cell::Int(self)
@@ -88,11 +97,17 @@ impl Dataframe {
         }
     }
 
-    pub fn add_col<T>(&mut self, name: String, set: Vec<T>)
+    pub fn add_col<T>(&mut self, name: String, set: Vec<T>) -> Result<(), MyErr>
     where
         T: ToCell,
     {
+        if self.columns.len() > 0 && self.columns[0].values.len() != set.len() {
+            return Err(MyErr {
+                reason: String::from("Invalid col length"),
+            });
+        }
         self.columns.push(Col::new(name, set));
+        Ok(())
     }
 
     pub fn add_row<T>(&mut self, set: Vec<T>) -> Result<(), MyErr>
@@ -173,6 +188,7 @@ enum Op {
 }
 
 pub fn main() {
-    let df = Dataframe::new(String::from("Raw Data"));
+    let mut df = Dataframe::new(String::from("Raw Data"));
+    df.add_col("nums".to_string(), Vec::from([0, 1, 2, 3, 4, 5, 6, 7, 8]));
     df.display();
 }
