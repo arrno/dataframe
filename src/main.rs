@@ -1,6 +1,5 @@
 use std::cmp::{max, min};
-use std::error::Error;
-use std::fmt::{self, format};
+use std::fmt;
 
 const MAX_CELL_DISPLAY: usize = 20;
 
@@ -12,6 +11,13 @@ impl fmt::Display for MyErr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Oh No! {}", self.reason)
     }
+}
+
+enum Join {
+    Left,
+    Right,
+    Inner,
+    Union,
 }
 
 #[derive(PartialEq, Clone)]
@@ -35,7 +41,7 @@ impl Cell {
             Cell::Int(x) => format!("{x}"),
             Cell::Uint(x) => format!("{x}"),
             Cell::Str(x) => format!("{x}"),
-            Cell::Null => String::from("null"),
+            Cell::Null => String::from("Null"),
         }
     }
 }
@@ -81,6 +87,21 @@ impl ToCell for String {
     }
 }
 
+impl<T: ToCell> ToCell for Option<T> {
+    fn to_cell(self) -> Cell {
+        match self {
+            Some(val) => val.to_cell(),
+            None => Cell::Null,
+        }
+    }
+    fn ref_to_cell(&self) -> Cell {
+        match self {
+            Some(val) => val.ref_to_cell(),
+            None => Cell::Null,
+        }
+    }
+}
+
 struct Col {
     name: String,
     values: Vec<Cell>,
@@ -119,8 +140,30 @@ impl Dataframe {
 
     pub fn from_csv() {} // TODO
     pub fn to_csv() {} // TODO
+    pub fn join() {} // TODO
 
     pub fn add_col<T>(&mut self, name: String, set: Vec<T>) -> Result<(), MyErr>
+    where
+        T: ToCell,
+    {
+        let l = self.length();
+        if l != 0 && l != set.len() {
+            return Err(MyErr {
+                reason: String::from("Invalid col length"),
+            });
+        }
+        for col in self.columns.iter() {
+            if col.name == name {
+                return Err(MyErr {
+                    reason: String::from("Col names must be unique"),
+                });
+            }
+        }
+        self.columns.push(Col::new(name, set));
+        Ok(())
+    }
+
+    pub fn add_opt_col<T>(&mut self, name: String, set: Vec<Option<T>>) -> Result<(), MyErr>
     where
         T: ToCell,
     {
@@ -163,10 +206,30 @@ impl Dataframe {
         Ok(())
     }
 
-    pub fn filter<T>(&mut self, exp: Exp<T>) -> Result<Self, MyErr>
+    pub fn add_opt_row<T>(&mut self, set: Vec<Option<T>>) -> Result<(), MyErr>
     where
         T: ToCell,
     {
+        if set.len() != self.columns.len() {
+            return Err(MyErr {
+                reason: String::from("Invalid col length"),
+            });
+        }
+        for (i, col) in self.columns.iter().enumerate() {
+            if col.values.len() > 0 && col.values[0].zero() != set[i].ref_to_cell().zero() {
+                return Err(MyErr {
+                    reason: String::from("Invalid col types"),
+                });
+            }
+        }
+        for i in 0..set.len() {
+            self.columns[i].values.push(set[i].ref_to_cell());
+        }
+        Ok(())
+    }
+
+    // TODO, support complex expressions
+    pub fn filter(&mut self, exp: ExpU) -> Result<Self, MyErr> {
         let filter_col = match self.columns.iter().find(|col| col.name == exp.target) {
             Some(col) => col,
             None => {
@@ -231,13 +294,9 @@ impl Dataframe {
         self.columns[0].values.len()
     }
 
-    pub fn display(&self) {
-        println!("[DATAFRAME]")
-    }
-
     pub fn head(&self) -> Result<(), MyErr> {
         // Slice head
-        let head_df = self.slice(0, std::cmp::min(5, self.length()))?;
+        let head_df = self.slice(0, min(5, self.length()))?;
         let mut col_lengths: Vec<usize> = head_df
             .columns
             .iter()
@@ -266,7 +325,7 @@ impl Dataframe {
             .for_each(|(i, col)| print!("|{}", pad_string(&col.name, col_lengths[i])));
         print!("|\n");
         println!("{sep}+");
-        for row in 0..5 {
+        for row in 0..min(5, head_df.length()) {
             for col in 0..col_lengths.len() {
                 print!(
                     "|{}",
@@ -293,15 +352,33 @@ fn pad_string(s: &str, w: usize) -> String {
     return format!("{s}{spaces}");
 }
 
-struct Exp<T: ToCell> {
+struct ExpU {
     target: String,
     op: Op,
-    value: T,
+    value: Cell,
 }
 
-impl<T: ToCell> Exp<T> {
-    pub fn new(target: String, op: Op, value: T) -> Self {
-        Exp { target, op, value }
+struct Or {
+    left: Box<Exp>,
+    right: Box<Exp>,
+}
+struct And {
+    left: Box<Exp>,
+    right: Box<Exp>,
+}
+enum Exp {
+    Or(Or),
+    And(And),
+    ExpU(ExpU),
+}
+
+impl ExpU {
+    pub fn new<T: ToCell>(target: String, op: Op, value: T) -> Self {
+        ExpU {
+            target: target,
+            op: op,
+            value: value.to_cell(),
+        }
     }
 }
 
@@ -321,9 +398,19 @@ pub fn main() {
         Vec::from([9, 10, 11, 12, 13, 14, 15, 16, 17]),
     )
     .unwrap();
-    df.add_col(
+    df.add_opt_col(
         "the best nums".to_string(),
-        Vec::from([-10, 0, 200, 400, 777, -289, 7, 12, 902]),
+        Vec::from([
+            Some(-10),
+            None,
+            Some(200),
+            Some(400),
+            Some(777),
+            Some(-289),
+            Some(7),
+            Some(12),
+            Some(902),
+        ]),
     )
     .unwrap();
     df.add_col(
