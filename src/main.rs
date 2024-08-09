@@ -1,5 +1,8 @@
+use std::cmp::{max, min};
 use std::error::Error;
-use std::fmt;
+use std::fmt::{self, format};
+
+const MAX_CELL_DISPLAY: usize = 20;
 
 #[derive(Debug, Clone)]
 struct MyErr {
@@ -25,6 +28,14 @@ impl Cell {
             Cell::Uint(_) => Cell::Uint(0),
             Cell::Str(_) => Cell::Str(String::new()),
             Cell::Null => Cell::Null,
+        }
+    }
+    pub fn as_string(&self) -> String {
+        match self {
+            Cell::Int(x) => format!("{x}"),
+            Cell::Uint(x) => format!("{x}"),
+            Cell::Str(x) => format!("{x}"),
+            Cell::Null => String::from("null"),
         }
     }
 }
@@ -58,6 +69,15 @@ impl ToCell for i64 {
     }
     fn ref_to_cell(&self) -> Cell {
         Cell::Int(self.clone())
+    }
+}
+
+impl ToCell for String {
+    fn to_cell(self) -> Cell {
+        Cell::Str(self)
+    }
+    fn ref_to_cell(&self) -> Cell {
+        Cell::Str(self.clone())
     }
 }
 
@@ -184,10 +204,7 @@ impl Dataframe {
         })
     }
 
-    pub fn slice<T>(&mut self, start: usize, stop: usize) -> Result<Self, MyErr>
-    where
-        T: ToCell,
-    {
+    pub fn slice(&self, start: usize, stop: usize) -> Result<Self, MyErr> {
         if start >= stop || stop > self.length() {
             return Err(MyErr {
                 reason: "Invalid slice params".to_string(),
@@ -217,6 +234,63 @@ impl Dataframe {
     pub fn display(&self) {
         println!("[DATAFRAME]")
     }
+
+    pub fn head(&self) -> Result<(), MyErr> {
+        // Slice head
+        let head_df = self.slice(0, std::cmp::min(5, self.length()))?;
+        let mut col_lengths: Vec<usize> = head_df
+            .columns
+            .iter()
+            .map(|col| min(MAX_CELL_DISPLAY, col.name.len()))
+            .collect();
+        // Calc col sizes
+        head_df.columns.iter().enumerate().for_each(|(i, col)| {
+            col.values.iter().for_each(|val| {
+                col_lengths[i] = min(MAX_CELL_DISPLAY, max(col_lengths[i], val.as_string().len()))
+            })
+        });
+        // Make sep
+        let sep = (0..col_lengths.len())
+            .map(|i| {
+                let s = "-".to_string().repeat(col_lengths[i]);
+                format!("+{s}")
+            })
+            .collect::<Vec<String>>()
+            .join("");
+        // Do print
+        println!("{sep}+");
+        head_df
+            .columns
+            .iter()
+            .enumerate()
+            .for_each(|(i, col)| print!("|{}", pad_string(&col.name, col_lengths[i])));
+        print!("|\n");
+        println!("{sep}+");
+        for row in 0..5 {
+            for col in 0..col_lengths.len() {
+                print!(
+                    "|{}",
+                    pad_string(
+                        &head_df.columns[col].values[row].as_string(),
+                        col_lengths[col]
+                    )
+                );
+            }
+            print!("|\n")
+        }
+        println!("{sep}+");
+        Ok(())
+    }
+}
+
+fn pad_string(s: &str, w: usize) -> String {
+    if s.len() == w {
+        return s.to_string();
+    } else if s.len() > w {
+        return s[..w].to_string();
+    }
+    let spaces = " ".to_string().repeat(w - s.len());
+    return format!("{s}{spaces}");
 }
 
 struct Exp<T: ToCell> {
@@ -240,6 +314,32 @@ enum Op {
 
 pub fn main() {
     let mut df = Dataframe::new(String::from("Raw Data"));
-    df.add_col("nums".to_string(), Vec::from([0, 1, 2, 3, 4, 5, 6, 7, 8]));
-    df.display();
+    df.add_col("nums".to_string(), Vec::from([0, 1, 2, 3, 4, 5, 6, 7, 8]))
+        .unwrap();
+    df.add_col(
+        "more nums".to_string(),
+        Vec::from([9, 10, 11, 12, 13, 14, 15, 16, 17]),
+    )
+    .unwrap();
+    df.add_col(
+        "the best nums".to_string(),
+        Vec::from([-10, 0, 200, 400, 777, -289, 7, 12, 902]),
+    )
+    .unwrap();
+    df.add_col(
+        "strangs".to_string(),
+        Vec::from([
+            "woop!".to_string(),
+            "Hello".to_string(),
+            "dope man".to_string(),
+            "cool boi".to_string(),
+            "wspwspwsp".to_string(),
+            ":-)".to_string(),
+            "Who's that daddy?".to_string(),
+            "Snarg".to_string(),
+            "NaNaNaN".to_string(),
+        ]),
+    )
+    .unwrap();
+    df.head().unwrap();
 }
