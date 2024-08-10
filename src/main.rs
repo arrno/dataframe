@@ -240,7 +240,7 @@ impl Dataframe {
         Ok(())
     }
 
-    pub fn filter(&mut self, exp: ExpU) -> Result<Self, MyErr> {
+    pub fn filter_simple(&mut self, exp: ExpU) -> Result<Self, MyErr> {
         let filter_col = match self.columns.iter().find(|col| col.name == exp.target) {
             Some(col) => col,
             None => {
@@ -278,7 +278,7 @@ impl Dataframe {
         })
     }
 
-    pub fn filter_complex(&mut self, mut exp: Exp) -> Result<Self, MyErr> {
+    pub fn filter(&mut self, mut exp: Exp) -> Result<Self, MyErr> {
         let col_map = self.col_map();
         let filter_set = (0..self.length())
             .map(|i| {
@@ -335,16 +335,14 @@ impl Dataframe {
         self.columns[0].values.len()
     }
 
-    pub fn head(&self) -> Result<(), MyErr> {
-        // Slice head
-        let head_df = self.slice(0, min(5, self.length()))?;
-        let mut col_lengths: Vec<usize> = head_df
+    pub fn print(&self) {
+        let mut col_lengths: Vec<usize> = self
             .columns
             .iter()
             .map(|col| min(MAX_CELL_DISPLAY, col.name.len()))
             .collect();
         // Calc col sizes
-        head_df.columns.iter().enumerate().for_each(|(i, col)| {
+        self.columns.iter().enumerate().for_each(|(i, col)| {
             col.values.iter().for_each(|val| {
                 col_lengths[i] = min(MAX_CELL_DISPLAY, max(col_lengths[i], val.as_string().len()))
             })
@@ -359,26 +357,28 @@ impl Dataframe {
             .join("");
         // Do print
         println!("{sep}+");
-        head_df
-            .columns
+        self.columns
             .iter()
             .enumerate()
             .for_each(|(i, col)| print!("|{}", pad_string(&col.name, col_lengths[i])));
         print!("|\n");
         println!("{sep}+");
-        for row in 0..min(5, head_df.length()) {
+        for row in 0..self.length() {
             for col in 0..col_lengths.len() {
                 print!(
                     "|{}",
-                    pad_string(
-                        &head_df.columns[col].values[row].as_string(),
-                        col_lengths[col]
-                    )
+                    pad_string(&self.columns[col].values[row].as_string(), col_lengths[col])
                 );
             }
             print!("|\n")
         }
         println!("{sep}+");
+    }
+
+    pub fn head(&self) -> Result<(), MyErr> {
+        // Slice head
+        let head_df = self.slice(0, min(5, self.length()))?;
+        head_df.print();
         Ok(())
     }
 }
@@ -404,28 +404,52 @@ impl ExpU {
         match &self.value {
             Cell::Int(v) => {
                 if let Cell::Int(a) = against {
-                    v == a
+                    match self.op {
+                        Op::Eq => v == a,
+                        Op::Neq => v != a,
+                        Op::Gt => a > v,
+                        Op::Lt => a < v,
+                        Op::IsNull => false,
+                        Op::NotNull => true,
+                    }
                 } else {
                     false
                 }
             }
             Cell::Uint(v) => {
                 if let Cell::Uint(a) = against {
-                    v == a
+                    match self.op {
+                        Op::Eq => v == a,
+                        Op::Neq => v != a,
+                        Op::Gt => a > v,
+                        Op::Lt => a < v,
+                        Op::IsNull => false,
+                        Op::NotNull => true,
+                    }
                 } else {
                     false
                 }
             }
             Cell::Str(v) => {
                 if let Cell::Str(a) = against {
-                    v == a
+                    match self.op {
+                        Op::Eq => v == a,
+                        Op::Neq => v != a,
+                        Op::Gt => a > v,
+                        Op::Lt => a < v,
+                        Op::IsNull => false,
+                        Op::NotNull => true,
+                    }
                 } else {
                     false
                 }
             }
             Cell::Null => {
                 if let Cell::Null = against {
-                    true
+                    match self.op {
+                        Op::IsNull => true,
+                        _ => false,
+                    }
                 } else {
                     false
                 }
@@ -485,6 +509,8 @@ enum Op {
     Neq,
     Gt,
     Lt,
+    IsNull,
+    NotNull,
 }
 
 pub fn main() {
@@ -526,7 +552,7 @@ pub fn main() {
         ]),
     )
     .unwrap();
-    df.head().unwrap();
+    df.print();
 
     df.col_mut("nums".to_string())
         .unwrap()
@@ -538,4 +564,22 @@ pub fn main() {
             }
         });
     df.head().unwrap();
+
+    let f_df = df
+        .filter(Exp::And(And {
+            vexp: vec![
+                Exp::ExpU(ExpU {
+                    target: "nums".to_string(),
+                    op: Op::Gt,
+                    value: Cell::Int(3),
+                }),
+                Exp::ExpU(ExpU {
+                    target: "the best nums".to_string(),
+                    op: Op::NotNull,
+                    value: Cell::Int(0),
+                }),
+            ],
+        }))
+        .unwrap();
+    f_df.print();
 }
