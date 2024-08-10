@@ -390,17 +390,11 @@ impl Exp {
     }
     // Ideally, we flatten, check truth vals, update truthy by ref, then evaluate structured expression
     pub fn flatten(&self) -> Vec<&ExpU> {
-        let mut refs: Vec<&ExpU> = Vec::new();
         match self {
-            Self::ExpU(ex) => refs.push(ex),
-            Self::Or(ex) => ex.vexp.iter().for_each(|e| {
-                refs.extend(e.flatten());
-            }),
-            Self::And(ex) => ex.vexp.iter().for_each(|e| {
-                refs.extend(e.flatten());
-            }),
-        };
-        refs
+            Self::ExpU(ex) => vec![ex],
+            Self::Or(ex) => ex.vexp.iter().map(|e| e.flatten()).flatten().collect(),
+            Self::And(ex) => ex.vexp.iter().map(|e| e.flatten()).flatten().collect(),
+        }
     }
 }
 
