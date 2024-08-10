@@ -356,20 +356,52 @@ struct ExpU {
     target: String,
     op: Op,
     value: Cell,
+    truthy: bool,
+}
+
+impl ExpU {
+    pub fn is_truthy(&self) -> bool {
+        self.truthy
+    }
 }
 
 struct Or {
-    left: Box<Exp>,
-    right: Box<Exp>,
+    vexp: Vec<Exp>,
 }
 struct And {
-    left: Box<Exp>,
-    right: Box<Exp>,
+    vexp: Vec<Exp>,
 }
 enum Exp {
     Or(Or),
     And(And),
     ExpU(ExpU),
+}
+
+impl Exp {
+    pub fn evaluate(&self) -> bool {
+        match self {
+            Self::ExpU(ex) => ex.is_truthy(),
+            Self::Or(ex) => match ex.vexp.iter().find(|e| e.evaluate()) {
+                Some(_) => true,
+                _ => false,
+            },
+            Self::And(ex) => ex.vexp.iter().all(|e| e.evaluate()),
+        }
+    }
+    // Ideally, we flatten, check truth vals, update truthy by ref, then evaluate structured expression
+    pub fn flatten(&self) -> Vec<&ExpU> {
+        let mut refs: Vec<&ExpU> = Vec::new();
+        match self {
+            Self::ExpU(ex) => refs.push(ex),
+            Self::Or(ex) => ex.vexp.iter().for_each(|e| {
+                refs.extend(e.flatten());
+            }),
+            Self::And(ex) => ex.vexp.iter().for_each(|e| {
+                refs.extend(e.flatten());
+            }),
+        };
+        refs
+    }
 }
 
 impl ExpU {
@@ -378,6 +410,7 @@ impl ExpU {
             target: target,
             op: op,
             value: value.to_cell(),
+            truthy: false,
         }
     }
 }
