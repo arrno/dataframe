@@ -1,4 +1,5 @@
 use std::cmp::{max, min};
+use std::collections::HashMap;
 use std::fmt;
 
 const MAX_CELL_DISPLAY: usize = 20;
@@ -142,6 +143,17 @@ impl Dataframe {
     pub fn to_csv() {} // TODO
     pub fn join() {} // TODO
 
+    pub fn col_mut(&mut self, name: String) -> Option<&mut Col> {
+        self.columns.iter_mut().find(|col| col.name == name)
+    }
+
+    pub fn col_map(&self) -> HashMap<String, &Vec<Cell>> {
+        self.columns
+            .iter()
+            .map(|c| (c.name.clone(), &c.values))
+            .collect()
+    }
+
     pub fn add_col<T>(&mut self, name: String, set: Vec<T>) -> Result<(), MyErr>
     where
         T: ToCell,
@@ -228,7 +240,6 @@ impl Dataframe {
         Ok(())
     }
 
-    // TODO, support complex expressions
     pub fn filter(&mut self, exp: ExpU) -> Result<Self, MyErr> {
         let filter_col = match self.columns.iter().find(|col| col.name == exp.target) {
             Some(col) => col,
@@ -246,6 +257,36 @@ impl Dataframe {
                 _ => true, // TODO
             })
             .collect();
+
+        Ok(Dataframe {
+            title: self.title.clone(),
+            columns: self
+                .columns
+                .iter()
+                .map(|col| Col {
+                    name: col.name.clone(),
+                    typed: col.typed.clone(),
+                    values: col
+                        .values
+                        .iter()
+                        .enumerate()
+                        .filter(|(i, _)| filter_set[*i])
+                        .map(|(_, c)| c.clone())
+                        .collect(),
+                })
+                .collect(),
+        })
+    }
+
+    pub fn filter_complex(&mut self, mut exp: Exp) -> Result<Self, MyErr> {
+        let col_map = self.col_map();
+        let filter_set = (0..self.length())
+            .map(|i| {
+                let val_map: HashMap<String, &Cell> =
+                    col_map.iter().map(|(k, v)| (k.to_owned(), &v[i])).collect();
+                exp.evaluate(&val_map)
+            })
+            .collect::<Vec<bool>>();
 
         Ok(Dataframe {
             title: self.title.clone(),
@@ -356,12 +397,40 @@ struct ExpU {
     target: String,
     op: Op,
     value: Cell,
-    truthy: bool,
 }
 
 impl ExpU {
-    pub fn is_truthy(&self) -> bool {
-        self.truthy
+    pub fn eval(&self, against: &Cell) -> bool {
+        match &self.value {
+            Cell::Int(v) => {
+                if let Cell::Int(a) = against {
+                    v == a
+                } else {
+                    false
+                }
+            }
+            Cell::Uint(v) => {
+                if let Cell::Uint(a) = against {
+                    v == a
+                } else {
+                    false
+                }
+            }
+            Cell::Str(v) => {
+                if let Cell::Str(a) = against {
+                    v == a
+                } else {
+                    false
+                }
+            }
+            Cell::Null => {
+                if let Cell::Null = against {
+                    true
+                } else {
+                    false
+                }
+            }
+        }
     }
 }
 
@@ -378,22 +447,25 @@ enum Exp {
 }
 
 impl Exp {
-    pub fn evaluate(&self) -> bool {
+    pub fn evaluate(&self, against: &HashMap<String, &Cell>) -> bool {
         match self {
-            Self::ExpU(ex) => ex.is_truthy(),
-            Self::Or(ex) => match ex.vexp.iter().find(|e| e.evaluate()) {
+            Self::ExpU(ex) => match against.get(&ex.target) {
+                Some(x) => ex.eval(x),
+                None => false,
+            },
+            Self::Or(ex) => match ex.vexp.iter().find(|e| e.evaluate(against)) {
                 Some(_) => true,
                 _ => false,
             },
-            Self::And(ex) => ex.vexp.iter().all(|e| e.evaluate()),
+            Self::And(ex) => ex.vexp.iter().all(|e| e.evaluate(against)),
         }
     }
     // Ideally, we flatten, check truth vals, update truthy by ref, then evaluate structured expression
-    pub fn flatten(&self) -> Vec<&ExpU> {
+    pub fn flatten(&mut self) -> Vec<&mut ExpU> {
         match self {
             Self::ExpU(ex) => vec![ex],
-            Self::Or(ex) => ex.vexp.iter().map(|e| e.flatten()).flatten().collect(),
-            Self::And(ex) => ex.vexp.iter().map(|e| e.flatten()).flatten().collect(),
+            Self::Or(ex) => ex.vexp.iter_mut().map(|e| e.flatten()).flatten().collect(),
+            Self::And(ex) => ex.vexp.iter_mut().map(|e| e.flatten()).flatten().collect(),
         }
     }
 }
@@ -404,7 +476,6 @@ impl ExpU {
             target: target,
             op: op,
             value: value.to_cell(),
-            truthy: false,
         }
     }
 }
@@ -455,5 +526,16 @@ pub fn main() {
         ]),
     )
     .unwrap();
+    df.head().unwrap();
+
+    df.col_mut("nums".to_string())
+        .unwrap()
+        .values
+        .iter_mut()
+        .for_each(|c| {
+            if let Cell::Int(x) = c {
+                *x += 2
+            }
+        });
     df.head().unwrap();
 }
