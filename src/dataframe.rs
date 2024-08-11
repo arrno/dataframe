@@ -1,8 +1,9 @@
 use crate::cell::*;
 use crate::column::*;
 use crate::expression::*;
+use crate::format::*;
 use crate::util::*;
-use std::cmp::{max, min};
+use std::cmp::min;
 use std::collections::HashMap;
 
 pub struct Dataframe {
@@ -16,48 +17,8 @@ pub struct DataSlice<'a> {
 }
 
 impl<'a> DataSlice<'a> {
-    // TODO offload to formatter
     pub fn print(&self) {
-        let mut col_lengths: Vec<usize> = self
-            .columns
-            .iter()
-            .map(|col| min(MAX_CELL_DISPLAY, col.name().len()))
-            .collect();
-        // Calc col sizes
-        self.columns.iter().enumerate().for_each(|(i, col)| {
-            col.values().iter().for_each(|val| {
-                col_lengths[i] = min(MAX_CELL_DISPLAY, max(col_lengths[i], val.as_string().len()))
-            })
-        });
-        // Make sep
-        let sep = (0..col_lengths.len())
-            .map(|i| {
-                let s = "-".to_string().repeat(col_lengths[i]);
-                format!("+{s}")
-            })
-            .collect::<Vec<String>>()
-            .join("");
-        // Do print
-        println!("{sep}+");
-        self.columns
-            .iter()
-            .enumerate()
-            .for_each(|(i, col)| print!("|{}", pad_string(&col.name(), col_lengths[i])));
-        print!("|\n");
-        println!("{sep}+");
-        for row in 0..self.length() {
-            for col in 0..col_lengths.len() {
-                print!(
-                    "|{}",
-                    pad_string(
-                        &self.columns[col].values()[row].as_string(),
-                        col_lengths[col]
-                    )
-                );
-            }
-            print!("|\n")
-        }
-        println!("{sep}+");
+        Formatter::new().print(self);
     }
 
     pub fn length(&self) -> usize {

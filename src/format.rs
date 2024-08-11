@@ -11,9 +11,9 @@ pub struct Formatter {
 }
 
 impl Formatter {
-    pub fn new(max_cell: usize) -> Self {
+    pub fn new() -> Self {
         Formatter {
-            max_cell_display: max_cell,
+            max_cell_display: MAX_CELL_DISPLAY,
         }
     }
 
