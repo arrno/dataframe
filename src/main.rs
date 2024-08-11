@@ -1,4 +1,5 @@
 mod cell;
+mod column;
 mod dataframe;
 mod expression;
 mod format;

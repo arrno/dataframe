@@ -1,59 +1,9 @@
 use crate::cell::*;
+use crate::column::*;
 use crate::expression::*;
 use crate::util::*;
 use std::cmp::{max, min};
 use std::collections::HashMap;
-
-pub struct Col {
-    name: String,
-    values: Vec<Cell>,
-    typed: Cell,
-}
-
-pub struct ColSlice<'a> {
-    name: &'a str,
-    values: &'a [Cell],
-    typed: &'a Cell,
-}
-
-impl<'a> ColSlice<'a> {
-    pub fn values(&self) -> &'a [Cell] {
-        &self.values
-    }
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-}
-
-impl<'a> From<&'a Col> for ColSlice<'a> {
-    fn from(col: &'a Col) -> Self {
-        ColSlice {
-            name: &col.name,
-            values: &col.values[..],
-            typed: &col.typed,
-        }
-    }
-}
-
-impl Col {
-    pub fn new<T>(name: String, set: Vec<T>) -> Self
-    where
-        T: ToCell,
-    {
-        let mut z = Cell::Null;
-        if set.len() > 0 {
-            z = set[0].ref_to_cell().zero();
-        }
-        Col {
-            name: name,
-            values: set.into_iter().map(|val| val.to_cell()).collect(), // should validate all types match
-            typed: z,
-        }
-    }
-    fn values_mut(&mut self) -> &mut Vec<Cell> {
-        &mut self.values
-    }
-}
 
 pub struct Dataframe {
     title: String,
@@ -66,15 +16,16 @@ pub struct DataSlice<'a> {
 }
 
 impl<'a> DataSlice<'a> {
+    // TODO offload to formatter
     pub fn print(&self) {
         let mut col_lengths: Vec<usize> = self
             .columns
             .iter()
-            .map(|col| min(MAX_CELL_DISPLAY, col.name.len()))
+            .map(|col| min(MAX_CELL_DISPLAY, col.name().len()))
             .collect();
         // Calc col sizes
         self.columns.iter().enumerate().for_each(|(i, col)| {
-            col.values.iter().for_each(|val| {
+            col.values().iter().for_each(|val| {
                 col_lengths[i] = min(MAX_CELL_DISPLAY, max(col_lengths[i], val.as_string().len()))
             })
         });
@@ -91,14 +42,17 @@ impl<'a> DataSlice<'a> {
         self.columns
             .iter()
             .enumerate()
-            .for_each(|(i, col)| print!("|{}", pad_string(&col.name, col_lengths[i])));
+            .for_each(|(i, col)| print!("|{}", pad_string(&col.name(), col_lengths[i])));
         print!("|\n");
         println!("{sep}+");
         for row in 0..self.length() {
             for col in 0..col_lengths.len() {
                 print!(
                     "|{}",
-                    pad_string(&self.columns[col].values[row].as_string(), col_lengths[col])
+                    pad_string(
+                        &self.columns[col].values()[row].as_string(),
+                        col_lengths[col]
+                    )
                 );
             }
             print!("|\n")
@@ -110,7 +64,7 @@ impl<'a> DataSlice<'a> {
         if self.columns.len() == 0 {
             return 0;
         }
-        self.columns[0].values.len()
+        self.columns[0].values().len()
     }
     pub fn columns(&self) -> &Vec<ColSlice<'a>> {
         &self.columns
@@ -141,7 +95,7 @@ impl Dataframe {
     pub fn col_mut(&mut self, name: String) -> Option<&mut Vec<Cell>> {
         self.columns
             .iter_mut()
-            .find(|col| col.name == name)?
+            .find(|col| col.name() == name)?
             .values_mut()
             .into()
     }
@@ -149,7 +103,7 @@ impl Dataframe {
     pub fn col_map(&self) -> HashMap<String, &Vec<Cell>> {
         self.columns
             .iter()
-            .map(|c| (c.name.clone(), &c.values))
+            .map(|c| (c.name().to_string(), c.values()))
             .collect()
     }
 
@@ -162,7 +116,7 @@ impl Dataframe {
             return Err(MyErr::new("Invalid col length".to_string()));
         }
         for col in self.columns.iter() {
-            if col.name == name {
+            if col.name() == name {
                 return Err(MyErr::new("Col names must be unique".to_string()));
             }
         }
@@ -179,7 +133,7 @@ impl Dataframe {
             return Err(MyErr::new("Invalid col length".to_string()));
         }
         for col in self.columns.iter() {
-            if col.name == name {
+            if col.name() == name {
                 return Err(MyErr::new("Col names must be unique".to_string()));
             }
         }
@@ -195,12 +149,12 @@ impl Dataframe {
             return Err(MyErr::new("Invalid col length".to_string()));
         }
         for (i, col) in self.columns.iter().enumerate() {
-            if col.values.len() > 0 && col.values[0].zero() != set[i].ref_to_cell().zero() {
+            if col.values().len() > 0 && col.values()[0].zero() != set[i].ref_to_cell().zero() {
                 return Err(MyErr::new("Invalid col types".to_string()));
             }
         }
         for i in 0..set.len() {
-            self.columns[i].values.push(set[i].ref_to_cell());
+            self.columns[i].values_mut().push(set[i].ref_to_cell());
         }
         Ok(())
     }
@@ -213,48 +167,14 @@ impl Dataframe {
             return Err(MyErr::new("Invalid col length".to_string()));
         }
         for (i, col) in self.columns.iter().enumerate() {
-            if col.values.len() > 0 && col.values[0].zero() != set[i].ref_to_cell().zero() {
+            if col.values().len() > 0 && col.values()[0].zero() != set[i].ref_to_cell().zero() {
                 return Err(MyErr::new("Invalid col types".to_string()));
             }
         }
         for i in 0..set.len() {
-            self.columns[i].values.push(set[i].ref_to_cell());
+            self.columns[i].values_mut().push(set[i].ref_to_cell());
         }
         Ok(())
-    }
-
-    pub fn filter_simple(&mut self, exp: ExpU) -> Result<Self, MyErr> {
-        let filter_col = match self.columns.iter().find(|col| col.name == *exp.target()) {
-            Some(col) => col,
-            None => return Err(MyErr::new("Target not found".to_string())),
-        };
-
-        let filter_set: Vec<bool> = filter_col
-            .values
-            .iter()
-            .map(|val| match exp {
-                _ => true, // TODO
-            })
-            .collect();
-
-        Ok(Dataframe {
-            title: self.title.clone(),
-            columns: self
-                .columns
-                .iter()
-                .map(|col| Col {
-                    name: col.name.clone(),
-                    typed: col.typed.clone(),
-                    values: col
-                        .values
-                        .iter()
-                        .enumerate()
-                        .filter(|(i, _)| filter_set[*i])
-                        .map(|(_, c)| c.clone())
-                        .collect(),
-                })
-                .collect(),
-        })
     }
 
     pub fn filter(&mut self, mut exp: Exp) -> Result<Self, MyErr> {
@@ -272,16 +192,17 @@ impl Dataframe {
             columns: self
                 .columns
                 .iter()
-                .map(|col| Col {
-                    name: col.name.clone(),
-                    typed: col.typed.clone(),
-                    values: col
-                        .values
-                        .iter()
-                        .enumerate()
-                        .filter(|(i, _)| filter_set[*i])
-                        .map(|(_, c)| c.clone())
-                        .collect(),
+                .map(|col| {
+                    Col::build(
+                        col.name().to_string(),
+                        col.values()
+                            .iter()
+                            .enumerate()
+                            .filter(|(i, _)| filter_set[*i])
+                            .map(|(_, c)| c.clone())
+                            .collect(),
+                        col.typed().clone(),
+                    )
                 })
                 .collect(),
         })
@@ -296,11 +217,7 @@ impl Dataframe {
             columns: self
                 .columns
                 .iter()
-                .map(|col| ColSlice {
-                    name: &col.name,
-                    typed: &col.typed,
-                    values: &col.values[start..stop],
-                })
+                .map(|col| ColSlice::new(&col.name(), &col.values()[start..stop], &col.typed()))
                 .collect(),
         })
     }
@@ -321,11 +238,10 @@ impl Dataframe {
         if self.columns.len() == 0 {
             return 0;
         }
-        self.columns[0].values.len()
+        self.columns[0].values().len()
     }
 
     pub fn head(&self) -> Result<(), MyErr> {
-        // Slice head
         let head_df = self.slice(0, min(5, self.length()))?;
         head_df.print();
         Ok(())
