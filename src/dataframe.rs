@@ -1,5 +1,5 @@
 use crate::cell::*;
-use crate::expressions::*;
+use crate::expression::*;
 use crate::util::*;
 use std::cmp::{max, min};
 use std::collections::HashMap;
@@ -8,6 +8,31 @@ pub struct Col {
     name: String,
     values: Vec<Cell>,
     typed: Cell,
+}
+
+pub struct ColSlice<'a> {
+    name: &'a str,
+    values: &'a [Cell],
+    typed: &'a Cell,
+}
+
+impl<'a> ColSlice<'a> {
+    pub fn values(&self) -> &'a [Cell] {
+        &self.values
+    }
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+}
+
+impl<'a> From<&'a Col> for ColSlice<'a> {
+    fn from(col: &'a Col) -> Self {
+        ColSlice {
+            name: &col.name,
+            values: &col.values[..],
+            typed: &col.typed,
+        }
+    }
 }
 
 impl Col {
@@ -35,6 +60,72 @@ pub struct Dataframe {
     columns: Vec<Col>,
 }
 
+pub struct DataSlice<'a> {
+    title: &'a str,
+    columns: Vec<ColSlice<'a>>,
+}
+
+impl<'a> DataSlice<'a> {
+    pub fn print(&self) {
+        let mut col_lengths: Vec<usize> = self
+            .columns
+            .iter()
+            .map(|col| min(MAX_CELL_DISPLAY, col.name.len()))
+            .collect();
+        // Calc col sizes
+        self.columns.iter().enumerate().for_each(|(i, col)| {
+            col.values.iter().for_each(|val| {
+                col_lengths[i] = min(MAX_CELL_DISPLAY, max(col_lengths[i], val.as_string().len()))
+            })
+        });
+        // Make sep
+        let sep = (0..col_lengths.len())
+            .map(|i| {
+                let s = "-".to_string().repeat(col_lengths[i]);
+                format!("+{s}")
+            })
+            .collect::<Vec<String>>()
+            .join("");
+        // Do print
+        println!("{sep}+");
+        self.columns
+            .iter()
+            .enumerate()
+            .for_each(|(i, col)| print!("|{}", pad_string(&col.name, col_lengths[i])));
+        print!("|\n");
+        println!("{sep}+");
+        for row in 0..self.length() {
+            for col in 0..col_lengths.len() {
+                print!(
+                    "|{}",
+                    pad_string(&self.columns[col].values[row].as_string(), col_lengths[col])
+                );
+            }
+            print!("|\n")
+        }
+        println!("{sep}+");
+    }
+
+    pub fn length(&self) -> usize {
+        if self.columns.len() == 0 {
+            return 0;
+        }
+        self.columns[0].values.len()
+    }
+    pub fn columns(&self) -> &Vec<ColSlice<'a>> {
+        &self.columns
+    }
+}
+
+impl<'a> From<&'a Dataframe> for DataSlice<'a> {
+    fn from(df: &'a Dataframe) -> Self {
+        DataSlice {
+            title: &df.title,
+            columns: df.columns.iter().map(|col| col.into()).collect(),
+        }
+    }
+}
+
 impl Dataframe {
     pub fn new(title: String) -> Self {
         Dataframe {
@@ -45,7 +136,7 @@ impl Dataframe {
 
     pub fn from_csv() {} // TODO
     pub fn to_csv() {} // TODO
-    pub fn join() {} // TODO
+    pub fn from_json() {} // TODO
 
     pub fn col_mut(&mut self, name: String) -> Option<&mut Vec<Cell>> {
         self.columns
@@ -196,22 +287,34 @@ impl Dataframe {
         })
     }
 
-    pub fn slice(&self, start: usize, stop: usize) -> Result<Self, MyErr> {
+    pub fn slice(&self, start: usize, stop: usize) -> Result<DataSlice, MyErr> {
         if start >= stop || stop > self.length() {
             return Err(MyErr::new("Invalid slice params".to_string()));
         }
-        Ok(Dataframe {
-            title: self.title.clone(),
+        Ok(DataSlice {
+            title: &self.title,
             columns: self
                 .columns
                 .iter()
-                .map(|col| Col {
-                    name: col.name.clone(),
-                    typed: col.typed.clone(),
-                    values: col.values[start..stop].to_vec(),
+                .map(|col| ColSlice {
+                    name: &col.name,
+                    typed: &col.typed,
+                    values: &col.values[start..stop],
                 })
                 .collect(),
         })
+    }
+
+    fn compare(&self, with: &Dataframe) -> Result<(), MyErr> {
+        Ok(())
+    }
+
+    pub fn join(&mut self, with: Dataframe, on: &str) -> Result<(), MyErr> {
+        Ok(())
+    }
+
+    pub fn concat(&mut self, with: Dataframe) -> Result<(), MyErr> {
+        Ok(())
     }
 
     fn length(&self) -> usize {
@@ -221,50 +324,14 @@ impl Dataframe {
         self.columns[0].values.len()
     }
 
-    pub fn print(&self) {
-        let mut col_lengths: Vec<usize> = self
-            .columns
-            .iter()
-            .map(|col| min(MAX_CELL_DISPLAY, col.name.len()))
-            .collect();
-        // Calc col sizes
-        self.columns.iter().enumerate().for_each(|(i, col)| {
-            col.values.iter().for_each(|val| {
-                col_lengths[i] = min(MAX_CELL_DISPLAY, max(col_lengths[i], val.as_string().len()))
-            })
-        });
-        // Make sep
-        let sep = (0..col_lengths.len())
-            .map(|i| {
-                let s = "-".to_string().repeat(col_lengths[i]);
-                format!("+{s}")
-            })
-            .collect::<Vec<String>>()
-            .join("");
-        // Do print
-        println!("{sep}+");
-        self.columns
-            .iter()
-            .enumerate()
-            .for_each(|(i, col)| print!("|{}", pad_string(&col.name, col_lengths[i])));
-        print!("|\n");
-        println!("{sep}+");
-        for row in 0..self.length() {
-            for col in 0..col_lengths.len() {
-                print!(
-                    "|{}",
-                    pad_string(&self.columns[col].values[row].as_string(), col_lengths[col])
-                );
-            }
-            print!("|\n")
-        }
-        println!("{sep}+");
-    }
-
     pub fn head(&self) -> Result<(), MyErr> {
         // Slice head
         let head_df = self.slice(0, min(5, self.length()))?;
         head_df.print();
         Ok(())
+    }
+
+    pub fn print(&self) {
+        DataSlice::from(self).print();
     }
 }

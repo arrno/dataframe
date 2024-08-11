@@ -1,12 +1,13 @@
 mod cell;
 mod dataframe;
-mod expressions;
+mod expression;
+mod format;
 mod join;
 mod util;
 
 use crate::cell::*;
 use crate::dataframe::*;
-use crate::expressions::*;
+use crate::expression::*;
 
 pub fn main() {
     let mut df = Dataframe::new(String::from("Raw Data"));
@@ -47,7 +48,6 @@ pub fn main() {
         ]),
     )
     .unwrap();
-    df.print();
 
     df.col_mut("nums".to_string())
         .unwrap()
