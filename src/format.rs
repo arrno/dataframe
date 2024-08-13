@@ -18,10 +18,20 @@ impl Formatter {
     }
 
     fn lengths(&self, df: &DataSlice) -> Vec<usize> {
-        df.columns()
+        let mut lengths = df
+            .columns()
             .iter()
             .map(|col| min(self.max_cell_display, col.name().len()))
-            .collect()
+            .collect::<Vec<usize>>();
+        df.columns().iter().enumerate().for_each(|(i, col)| {
+            col.values().iter().for_each(|val| {
+                lengths[i] = min(
+                    self.max_cell_display,
+                    max(lengths[i], val.as_string().len()),
+                )
+            })
+        });
+        lengths
     }
     fn sep(&self, lengths: &Vec<usize>) -> String {
         (0..lengths.len())
@@ -55,16 +65,7 @@ impl Formatter {
     }
 
     pub fn print(&self, df: &DataSlice) {
-        let mut lengths = self.lengths(df);
-        // Calc col sizes
-        df.columns().iter().enumerate().for_each(|(i, col)| {
-            col.values().iter().for_each(|val| {
-                lengths[i] = min(
-                    self.max_cell_display,
-                    max(lengths[i], val.as_string().len()),
-                )
-            })
-        });
+        let lengths = self.lengths(df);
         self.do_print(df, &lengths);
     }
 }
