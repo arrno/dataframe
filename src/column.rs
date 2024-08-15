@@ -65,6 +65,9 @@ impl<'a> ColSlice<'a> {
     pub fn name(&self) -> &str {
         &self.name
     }
+    pub fn typed(&self) -> &Cell {
+        &self.typed
+    }
 }
 
 impl<'a> From<&'a Col> for ColSlice<'a> {

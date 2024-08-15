@@ -5,6 +5,7 @@ use crate::format::*;
 use crate::util::*;
 use std::cmp::min;
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 pub struct Dataframe {
     title: String,
@@ -29,6 +30,30 @@ impl<'a> DataSlice<'a> {
     }
     pub fn columns(&self) -> &Vec<ColSlice<'a>> {
         &self.columns
+    }
+    pub fn slice(&self, start: usize, stop: usize) -> Result<DataSlice, MyErr> {
+        if start >= stop || stop > self.length() {
+            return Err(MyErr::new("Invalid slice params".to_string()));
+        }
+        Ok(DataSlice {
+            title: &self.title,
+            columns: self
+                .columns
+                .iter()
+                .map(|col| ColSlice::new(&col.name(), &col.values()[start..stop], &col.typed()))
+                .collect(),
+        })
+    }
+    pub fn col_slice(&self, cols: HashSet<&str>) -> Result<DataSlice, MyErr> {
+        Ok(DataSlice {
+            title: &self.title,
+            columns: self
+                .columns
+                .iter()
+                .filter(|col| cols.contains(col.name()))
+                .map(|col| ColSlice::new(&col.name(), &col.values(), &col.typed()))
+                .collect(),
+        })
     }
 }
 
@@ -204,6 +229,18 @@ impl Dataframe {
         })
     }
 
+    pub fn col_slice(&self, cols: HashSet<&str>) -> Result<DataSlice, MyErr> {
+        Ok(DataSlice {
+            title: &self.title,
+            columns: self
+                .columns
+                .iter()
+                .filter(|col| cols.contains(col.name()))
+                .map(|col| ColSlice::new(&col.name(), &col.values(), &col.typed()))
+                .collect(),
+        })
+    }
+
     fn compare(&self, with: &Dataframe) -> bool {
         let self_map = self.type_map();
         let with_map = with.type_map();
@@ -224,6 +261,7 @@ impl Dataframe {
     pub fn join(&mut self, with: Dataframe, on: &str) -> Result<(), MyErr> {
         Ok(())
     }
+    pub fn sort() {} // TODO
 
     pub fn concat(&mut self, with: Dataframe) -> Result<(), MyErr> {
         if !self.compare(&with) {
