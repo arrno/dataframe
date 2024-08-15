@@ -34,6 +34,9 @@ impl Col {
     pub fn values(&self) -> &Vec<Cell> {
         &self.values
     }
+    pub fn take_values(self) -> Vec<Cell> {
+        self.values
+    }
     pub fn name(&self) -> &str {
         &self.name
     }

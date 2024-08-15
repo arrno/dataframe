@@ -68,6 +68,27 @@ impl Dataframe {
             .collect()
     }
 
+    pub fn col_map_mut(&mut self) -> HashMap<String, &mut Vec<Cell>> {
+        self.columns
+            .iter_mut()
+            .map(|c| (c.name().to_string(), c.values_mut()))
+            .collect()
+    }
+
+    pub fn into_col_map(self) -> HashMap<String, Vec<Cell>> {
+        self.columns
+            .into_iter()
+            .map(|c| (c.name().to_string(), c.take_values()))
+            .collect()
+    }
+
+    pub fn type_map(&self) -> HashMap<String, ()> {
+        self.columns
+            .iter()
+            .map(|col| (format!("{}__{}", col.name(), col.typed().type_string()), ()))
+            .collect()
+    }
+
     pub fn add_col<T>(&mut self, name: String, set: Vec<T>) -> Result<(), MyErr>
     where
         T: ToCell,
@@ -183,8 +204,21 @@ impl Dataframe {
         })
     }
 
-    fn compare(&self, with: &Dataframe) -> Result<(), MyErr> {
-        Ok(())
+    fn compare(&self, with: &Dataframe) -> bool {
+        let self_map = self.type_map();
+        let with_map = with.type_map();
+        if self_map.len() != with_map.len() {
+            return false;
+        }
+        let match_count = self_map
+            .iter()
+            .filter(|(k, _)| match with_map.get(k.as_str()) {
+                Some(_) => true,
+                _ => false,
+            })
+            .collect::<HashMap<&String, &()>>()
+            .len();
+        match_count != self_map.len()
     }
 
     pub fn join(&mut self, with: Dataframe, on: &str) -> Result<(), MyErr> {
@@ -192,6 +226,17 @@ impl Dataframe {
     }
 
     pub fn concat(&mut self, with: Dataframe) -> Result<(), MyErr> {
+        if !self.compare(&with) {
+            return Err(MyErr::new(
+                "Concat against mismatched dataframes".to_string(),
+            ));
+        }
+        let mut self_map = self.col_map_mut();
+        with.into_col_map().into_iter().for_each(|(name, ext_col)| {
+            if let Some(loc_col) = self_map.get_mut(&name) {
+                loc_col.extend(ext_col);
+            }
+        });
         Ok(())
     }
 

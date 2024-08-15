@@ -22,6 +22,14 @@ impl Cell {
             Cell::Null => String::from("Null"),
         }
     }
+    pub fn type_string(&self) -> String {
+        match self {
+            Cell::Int(_) => String::from("Int"),
+            Cell::Uint(_) => String::from("Uint"),
+            Cell::Str(_) => String::from("Str"),
+            Cell::Null => String::from("Null"),
+        }
+    }
 }
 
 pub trait ToCell {
