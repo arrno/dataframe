@@ -258,7 +258,74 @@ impl Dataframe {
         match_count != self_map.len()
     }
 
-    pub fn join(&mut self, with: Dataframe, on: &str) -> Result<(), MyErr> {
+    pub fn join(&self, with: &Dataframe, on: &str) -> Result<(), MyErr> {
+        // TODO protect against dup col names
+        let self_index = match self.columns.iter().find(|col| col.name() == on) {
+            Some(col) => col,
+            None => return Err(MyErr::new("join column not found on self.".to_string())),
+        };
+        let with_index = match with.columns.iter().find(|col| col.name() == on) {
+            Some(col) => col,
+            None => return Err(MyErr::new("join column not found on with.".to_string())),
+        };
+        let mut intersect_map: HashMap<String, (Vec<usize>, Vec<usize>)> = HashMap::new();
+        vec![self_index, with_index]
+            .iter()
+            .enumerate()
+            .for_each(|(idx, set)| {
+                set.values().iter().enumerate().for_each(|(i, val)| {
+                    let val_string = val.as_string();
+                    let indices_op = intersect_map.get_mut(&val_string);
+                    if let Some(indices) = indices_op {
+                        if idx == 0 {
+                            indices.0.push(i);
+                        } else {
+                            indices.1.push(i);
+                        }
+                    } else {
+                        if idx == 0 {
+                            intersect_map.insert(val_string, (vec![i], vec![]));
+                        } else {
+                            intersect_map.insert(val_string, (vec![], vec![i]));
+                        }
+                    }
+                });
+            });
+        let mut new_df = Dataframe {
+            title: self.title.clone(),
+            columns: vec![
+                self.columns
+                    .iter()
+                    .map(|c| c.empty_from())
+                    .collect::<Vec<Col>>(),
+                with.columns
+                    .iter()
+                    .map(|c| c.empty_from())
+                    .collect::<Vec<Col>>(),
+            ]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<Col>>(),
+        };
+        // let self_map = self.into_col_map();
+        // let with_map = with.into_col_map();
+        // let mut new_map = new_df.col_map_mut();
+        // intersect_map.iter().for_each(|(key, indices)| {
+        //     indices.0.iter().for_each(|i| {
+        //         indices.1.iter().for_each(|j| {
+        //             self_map.iter().for_each(|(k, v)| {
+        //                 if let Some(new_col) = new_map.get_mut(k) {
+        //                     if let Some(o_col) = self_map.get(k) {
+        //                         new_col.push(o_col[*i])
+        //                     }
+        //                 }
+        //             })
+        //         })
+        //     })
+        // });
+        // make new df with all columns
+        // for each in intersect_map,
+        // for each left index, for each right index, make combination row
         Ok(())
     }
     pub fn sort() {} // TODO

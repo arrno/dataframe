@@ -43,6 +43,13 @@ impl Col {
     pub fn typed(&self) -> &Cell {
         &self.typed
     }
+    pub fn empty_from(&self) -> Col {
+        Col {
+            name: self.name.clone(),
+            values: vec![],
+            typed: self.typed.clone(),
+        }
+    }
 }
 
 pub struct ColSlice<'a> {
