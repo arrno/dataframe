@@ -67,4 +67,7 @@ pub fn main() {
         ])))
         .unwrap();
     f_df.print();
+
+    let col_slice = f_df.col_slice(["nums", "strangs"].into()).unwrap();
+    col_slice.print();
 }

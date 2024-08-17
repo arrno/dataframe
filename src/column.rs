@@ -75,6 +75,13 @@ impl<'a> ColSlice<'a> {
     pub fn typed(&self) -> &Cell {
         &self.typed
     }
+    pub fn empty_from(&self) -> Col {
+        Col {
+            name: self.name.to_string(),
+            values: vec![],
+            typed: self.typed.clone(),
+        }
+    }
 }
 
 impl<'a> From<&'a Col> for ColSlice<'a> {

@@ -258,7 +258,7 @@ impl Dataframe {
         match_count != self_map.len()
     }
 
-    pub fn join(&self, with: &Dataframe, on: &str) -> Result<(), MyErr> {
+    pub fn join(&self, with: &Dataframe, on: &str) -> Result<Dataframe, MyErr> {
         // TODO protect against dup col names
         let self_index = match self.columns.iter().find(|col| col.name() == on) {
             Some(col) => col,
@@ -291,6 +291,14 @@ impl Dataframe {
                     }
                 });
             });
+        // To prevent pushing index twice
+        let with_slice = with.col_slice(
+            with.columns
+                .iter()
+                .map(|col| col.name())
+                .filter(|name| *name != on)
+                .collect(),
+        )?;
         let mut new_df = Dataframe {
             title: self.title.clone(),
             columns: vec![
@@ -298,7 +306,8 @@ impl Dataframe {
                     .iter()
                     .map(|c| c.empty_from())
                     .collect::<Vec<Col>>(),
-                with.columns
+                with_slice
+                    .columns
                     .iter()
                     .map(|c| c.empty_from())
                     .collect::<Vec<Col>>(),
@@ -307,27 +316,30 @@ impl Dataframe {
             .flatten()
             .collect::<Vec<Col>>(),
         };
-        // let self_map = self.into_col_map();
-        // let with_map = with.into_col_map();
-        // let mut new_map = new_df.col_map_mut();
-        // intersect_map.iter().for_each(|(key, indices)| {
-        //     indices.0.iter().for_each(|i| {
-        //         indices.1.iter().for_each(|j| {
-        //             self_map.iter().for_each(|(k, v)| {
-        //                 if let Some(new_col) = new_map.get_mut(k) {
-        //                     if let Some(o_col) = self_map.get(k) {
-        //                         new_col.push(o_col[*i])
-        //                     }
-        //                 }
-        //             })
-        //         })
-        //     })
-        // });
-        // make new df with all columns
-        // for each in intersect_map,
-        // for each left index, for each right index, make combination row
-        Ok(())
+        // This is an inner join
+        intersect_map.iter().for_each(|(key, indices)| {
+            indices.0.iter().for_each(|i| {
+                indices.1.iter().for_each(|j| {
+                    self.columns.iter().enumerate().for_each(|(col_i, col)| {
+                        new_df.columns[col_i]
+                            .values_mut()
+                            .push(col.values()[*i].clone())
+                    });
+                    with_slice
+                        .columns
+                        .iter()
+                        .enumerate()
+                        .for_each(|(col_j, col)| {
+                            new_df.columns[self.columns.len() + col_j]
+                                .values_mut()
+                                .push(col.values()[*j].clone())
+                        });
+                })
+            })
+        });
+        Ok(new_df)
     }
+
     pub fn sort() {} // TODO
 
     pub fn concat(&mut self, with: Dataframe) -> Result<(), MyErr> {
