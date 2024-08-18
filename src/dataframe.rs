@@ -255,10 +255,10 @@ impl Dataframe {
             })
             .collect::<HashMap<&String, &()>>()
             .len();
-        match_count != self_map.len()
+        match_count == self_map.len()
     }
 
-    pub fn join(&self, with: &Dataframe, on: &str) -> Result<Dataframe, MyErr> {
+    pub fn join(&self, with: &Dataframe, on: &str) -> Result<Self, MyErr> {
         // TODO protect against dup col names
         let self_index = match self.columns.iter().find(|col| col.name() == on) {
             Some(col) => col,

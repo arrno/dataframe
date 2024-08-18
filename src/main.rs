@@ -70,4 +70,40 @@ pub fn main() {
 
     let col_slice = f_df.col_slice(["nums", "strangs"].into()).unwrap();
     col_slice.print();
+
+    let mut second_df = Dataframe::new(String::from("Raw Data"));
+    second_df
+        .add_col("nums".to_string(), Vec::from([0, 1, 2, 3, 4, 5, 6, 7, 8]))
+        .unwrap();
+    second_df
+        .add_col(
+            "sweet strangs".to_string(),
+            Vec::from([
+                "sweet".to_string(),
+                "sweetie".to_string(),
+                "dulce".to_string(),
+                "sugar pop".to_string(),
+                "honey-comb".to_string(),
+                "candy coat".to_string(),
+                "sugar".to_string(),
+                "caramel".to_string(),
+                "syrup".to_string(),
+            ]),
+        )
+        .unwrap();
+
+    let mut third_df = Dataframe::new(String::from("Raw Data"));
+    third_df
+        .add_col("nums".to_string(), Vec::from([9, 10]))
+        .unwrap();
+    third_df
+        .add_col(
+            "sweet strangs".to_string(),
+            Vec::from(["corn".to_string(), "grain".to_string()]),
+        )
+        .unwrap();
+    second_df.concat(third_df).unwrap();
+
+    let join_df = df.join(&second_df, "nums").unwrap();
+    join_df.print();
 }
