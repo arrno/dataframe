@@ -2,6 +2,7 @@ use crate::cell::*;
 use crate::column::*;
 use crate::expression::*;
 use crate::format::*;
+use crate::row::*;
 use crate::util::*;
 use std::cmp::min;
 use std::collections::HashMap;
@@ -74,9 +75,34 @@ impl Dataframe {
         }
     }
 
+    pub fn from_rows<T>(labels: Vec<&str>, rows: Vec<T>) -> Result<Self, MyErr>
+    where
+        T: ToRow,
+    {
+        let mut df = Self::new("dataframe".to_string());
+        if rows.len() == 0 {
+            return Ok(df);
+        }
+        let mut cols: Vec<Vec<Cell>> = labels.iter().map(|_| vec![]).collect();
+        for row in rows.into_iter() {
+            let cells = row.to_row();
+            if cells.len() != labels.len() {
+                return Err(MyErr::new("Inconsistent data shape".to_string()));
+            } else {
+                cells
+                    .into_iter()
+                    .enumerate()
+                    .for_each(|(i, cell)| cols[i].push(cell))
+            }
+        }
+        for (i, col) in cols.into_iter().enumerate() {
+            df.add_cell_col(labels[i].to_string(), col)?;
+        }
+        Ok(df)
+    }
+
     pub fn from_csv() {} // TODO
     pub fn to_csv() {} // TODO
-    pub fn from_json() {} // TODO
 
     pub fn col_mut(&mut self, name: String) -> Option<&mut Vec<Cell>> {
         self.columns
@@ -128,6 +154,21 @@ impl Dataframe {
             }
         }
         self.columns.push(Col::new(name, set));
+        Ok(())
+    }
+
+    pub fn add_cell_col(&mut self, name: String, set: Vec<Cell>) -> Result<(), MyErr> {
+        let l = self.length();
+        if l == 0 || l != set.len() {
+            return Err(MyErr::new("Invalid col length".to_string()));
+        }
+        for col in self.columns.iter() {
+            if col.name() == name {
+                return Err(MyErr::new("Col names must be unique".to_string()));
+            }
+        }
+        let zero = set[0].zero();
+        self.columns.push(Col::build(name, set, zero));
         Ok(())
     }
 
@@ -259,6 +300,71 @@ impl Dataframe {
     }
 
     pub fn join(&self, with: &Dataframe, on: &str) -> Result<Self, MyErr> {
+        // TODO protect against dup col names
+        let self_index = match self.columns.iter().find(|col| col.name() == on) {
+            Some(col) => col,
+            None => return Err(MyErr::new("join column not found on self.".to_string())),
+        };
+        let with_index = match with.columns.iter().find(|col| col.name() == on) {
+            Some(col) => col,
+            None => return Err(MyErr::new("join column not found on with.".to_string())),
+        };
+        let mut intersect_map: HashMap<String, Vec<usize>> = HashMap::new();
+        with_index.values().iter().enumerate().for_each(|(i, val)| {
+            intersect_map
+                .entry(val.as_string())
+                .or_insert(vec![])
+                .push(i);
+        });
+        // To prevent pushing index twice
+        let with_slice = with.col_slice(
+            with.columns
+                .iter()
+                .map(|col| col.name())
+                .filter(|name| *name != on)
+                .collect(),
+        )?;
+        let mut new_df = Dataframe {
+            title: self.title.clone(),
+            columns: vec![
+                self.columns
+                    .iter()
+                    .map(|c| c.empty_from())
+                    .collect::<Vec<Col>>(),
+                with_slice
+                    .columns
+                    .iter()
+                    .map(|c| c.empty_from())
+                    .collect::<Vec<Col>>(),
+            ]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<Col>>(),
+        };
+        self_index.values().iter().enumerate().for_each(|(i, val)| {
+            if let Some(indices) = intersect_map.get_mut(&val.as_string()) {
+                indices.iter().for_each(|with_i| {
+                    self.columns.iter().enumerate().for_each(|(col_i, col)| {
+                        new_df.columns[col_i]
+                            .values_mut()
+                            .push(col.values()[i].clone())
+                    });
+                    with_slice
+                        .columns
+                        .iter()
+                        .enumerate()
+                        .for_each(|(col_j, col)| {
+                            new_df.columns[self.columns.len() + col_j]
+                                .values_mut()
+                                .push(col.values()[*with_i].clone())
+                        });
+                })
+            }
+        });
+        Ok(new_df)
+    }
+
+    pub fn zip_join(&self, with: &Dataframe, on: &str) -> Result<Self, MyErr> {
         // TODO protect against dup col names
         let self_index = match self.columns.iter().find(|col| col.name() == on) {
             Some(col) => col,

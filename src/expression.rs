@@ -117,7 +117,6 @@ impl Exp {
             Self::And(ex) => ex.vexp.iter().all(|e| e.evaluate(against)),
         }
     }
-    // Ideally, we flatten, check truth vals, update truthy by ref, then evaluate structured expression
     pub fn flatten(&mut self) -> Vec<&mut ExpU> {
         match self {
             Self::ExpU(ex) => vec![ex],

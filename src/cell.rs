@@ -87,3 +87,9 @@ impl<T: ToCell> ToCell for Option<T> {
         }
     }
 }
+
+impl<T: ToCell> From<T> for Cell {
+    fn from(val: T) -> Self {
+        val.to_cell()
+    }
+}

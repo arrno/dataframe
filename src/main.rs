@@ -4,11 +4,15 @@ mod dataframe;
 mod expression;
 mod format;
 mod join;
+mod row;
 mod util;
+
+use std::collections::HashMap;
 
 use crate::cell::*;
 use crate::dataframe::*;
 use crate::expression::*;
+use crate::row::*;
 
 pub fn main() {
     let mut df = Dataframe::new(String::from("Raw Data"));
@@ -106,4 +110,29 @@ pub fn main() {
 
     let join_df = df.join(&second_df, "nums").unwrap();
     join_df.print();
+
+    let df = Dataframe::from_rows(
+        vec!["one", "two", "three"],
+        vec![
+            Person("Jasper".to_string(), 10, 89),
+            Person("Jake".to_string(), 20, 11),
+            Person("Susan".to_string(), 44, 27),
+            Person("Sally".to_string(), 72, 109),
+        ],
+    );
+}
+
+fn Person(name: String, age: u32, size: i64) -> MyStruct {
+    MyStruct { name, age, size }
+}
+struct MyStruct {
+    name: String,
+    age: u32,
+    size: i64,
+}
+
+impl ToRow for MyStruct {
+    fn to_row(self) -> Vec<Cell> {
+        vec![self.name.into(), self.age.into(), self.size.into()]
+    }
 }

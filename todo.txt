@@ -1,0 +1,4 @@
+protect against join shape mismatches
+sort
+from/to csv
+refine API
