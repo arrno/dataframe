@@ -1,5 +1,5 @@
+use crate::dataslice::*;
 use crate::util::*;
-use crate::DataSlice;
 use std::cmp::{max, min};
 
 pub trait formatter {
@@ -36,7 +36,7 @@ impl Formatter {
     fn sep(&self, lengths: &Vec<usize>) -> String {
         (0..lengths.len())
             .map(|i| {
-                let s = "-".to_string().repeat(lengths[i]);
+                let s = "-".to_string().repeat(lengths[i] + 2);
                 format!("+{s}")
             })
             .collect::<Vec<String>>()
@@ -49,14 +49,18 @@ impl Formatter {
         df.columns()
             .iter()
             .enumerate()
-            .for_each(|(i, col)| print!("|{}", pad_string(col.name(), lengths[i])));
+            .for_each(|(i, col)| print!("| {} ", pad_string(col.name(), lengths[i], false)));
         print!("|\n");
         println!("{sep}+");
         for row in 0..df.length() {
             for col in 0..lengths.len() {
                 print!(
-                    "|{}",
-                    pad_string(&df.columns()[col].values()[row].as_string(), lengths[col])
+                    "| {} ",
+                    pad_string(
+                        &df.columns()[col].values()[row].as_string(),
+                        lengths[col],
+                        df.columns()[col].typed().is_num()
+                    )
                 );
             }
             print!("|\n")

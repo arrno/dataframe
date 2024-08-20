@@ -30,6 +30,13 @@ impl Cell {
             Cell::Null => String::from("Null"),
         }
     }
+    pub fn is_num(&self) -> bool {
+        match self {
+            Cell::Int(x) => true,
+            Cell::Uint(x) => true,
+            _ => false,
+        }
+    }
 }
 
 pub trait ToCell {

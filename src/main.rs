@@ -1,6 +1,7 @@
 mod cell;
 mod column;
 mod dataframe;
+mod dataslice;
 mod expression;
 mod format;
 mod join;
@@ -120,6 +121,43 @@ pub fn main() {
             Person("Sally".to_string(), 72, 109),
         ],
     );
+
+    // TEMNO
+
+    let mut df = Dataframe::new(String::from("Raw Data"));
+    df.add_col(
+        "strangs".to_string(),
+        Vec::from([
+            "sugar".to_string(),
+            "sweets".to_string(),
+            "candy pop".to_string(),
+            "caramel".to_string(),
+            "chocolate".to_string(),
+            ":-)".to_string(),
+            "Who's that daddy?".to_string(),
+            "Snarg".to_string(),
+            "NaNaNaN".to_string(),
+        ]),
+    )
+    .unwrap();
+    df.add_col("nums".to_string(), Vec::from([0, 1, 2, 3, 4, 5, 6, 7, 8]))
+        .unwrap();
+    df.add_opt_col(
+        "null nums".to_string(),
+        Vec::from([
+            Some(-10),
+            None,
+            Some(200),
+            Some(400),
+            Some(777),
+            Some(-289),
+            Some(7),
+            Some(12),
+            Some(902),
+        ]),
+    )
+    .unwrap();
+    df.head();
 }
 
 fn Person(name: String, age: u32, size: i64) -> MyStruct {

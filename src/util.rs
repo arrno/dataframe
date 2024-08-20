@@ -17,12 +17,15 @@ impl fmt::Display for MyErr {
     }
 }
 
-pub fn pad_string(s: &str, w: usize) -> String {
+pub fn pad_string(s: &str, w: usize, left: bool) -> String {
     if s.len() == w {
         return s.to_string();
     } else if s.len() > w {
         return s[..w].to_string();
     }
     let spaces = " ".to_string().repeat(w - s.len());
-    return format!("{s}{spaces}");
+    match left {
+        false => format!("{s}{spaces}"),
+        true => format!("{spaces}{s}"),
+    }
 }

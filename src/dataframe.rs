@@ -1,7 +1,7 @@
 use crate::cell::*;
 use crate::column::*;
+use crate::dataslice::*;
 use crate::expression::*;
-use crate::format::*;
 use crate::row::*;
 use crate::util::*;
 use std::cmp::min;
@@ -13,66 +13,19 @@ pub struct Dataframe {
     columns: Vec<Col>,
 }
 
-pub struct DataSlice<'a> {
-    title: &'a str,
-    columns: Vec<ColSlice<'a>>,
-}
-
-impl<'a> DataSlice<'a> {
-    pub fn print(&self) {
-        Formatter::new().print(self);
-    }
-
-    pub fn length(&self) -> usize {
-        if self.columns.len() == 0 {
-            return 0;
-        }
-        self.columns[0].values().len()
-    }
-    pub fn columns(&self) -> &Vec<ColSlice<'a>> {
-        &self.columns
-    }
-    pub fn slice(&self, start: usize, stop: usize) -> Result<DataSlice, MyErr> {
-        if start >= stop || stop > self.length() {
-            return Err(MyErr::new("Invalid slice params".to_string()));
-        }
-        Ok(DataSlice {
-            title: &self.title,
-            columns: self
-                .columns
-                .iter()
-                .map(|col| ColSlice::new(&col.name(), &col.values()[start..stop], &col.typed()))
-                .collect(),
-        })
-    }
-    pub fn col_slice(&self, cols: HashSet<&str>) -> Result<DataSlice, MyErr> {
-        Ok(DataSlice {
-            title: &self.title,
-            columns: self
-                .columns
-                .iter()
-                .filter(|col| cols.contains(col.name()))
-                .map(|col| ColSlice::new(&col.name(), &col.values(), &col.typed()))
-                .collect(),
-        })
-    }
-}
-
-impl<'a> From<&'a Dataframe> for DataSlice<'a> {
-    fn from(df: &'a Dataframe) -> Self {
-        DataSlice {
-            title: &df.title,
-            columns: df.columns.iter().map(|col| col.into()).collect(),
-        }
-    }
-}
-
 impl Dataframe {
     pub fn new(title: String) -> Self {
         Dataframe {
             title: title,
             columns: vec![],
         }
+    }
+
+    pub fn title(&self) -> &String {
+        &self.title
+    }
+    pub fn columns(&self) -> &Vec<Col> {
+        &self.columns
     }
 
     pub fn from_rows<T>(labels: Vec<&str>, rows: Vec<T>) -> Result<Self, MyErr>
@@ -260,26 +213,24 @@ impl Dataframe {
         if start >= stop || stop > self.length() {
             return Err(MyErr::new("Invalid slice params".to_string()));
         }
-        Ok(DataSlice {
-            title: &self.title,
-            columns: self
-                .columns
+        Ok(DataSlice::new(
+            &self.title,
+            self.columns
                 .iter()
                 .map(|col| ColSlice::new(&col.name(), &col.values()[start..stop], &col.typed()))
                 .collect(),
-        })
+        ))
     }
 
     pub fn col_slice(&self, cols: HashSet<&str>) -> Result<DataSlice, MyErr> {
-        Ok(DataSlice {
-            title: &self.title,
-            columns: self
-                .columns
+        Ok(DataSlice::new(
+            &self.title,
+            self.columns
                 .iter()
                 .filter(|col| cols.contains(col.name()))
                 .map(|col| ColSlice::new(&col.name(), &col.values(), &col.typed()))
                 .collect(),
-        })
+        ))
     }
 
     fn compare(&self, with: &Dataframe) -> bool {
@@ -309,13 +260,13 @@ impl Dataframe {
             Some(col) => col,
             None => return Err(MyErr::new("join column not found on with.".to_string())),
         };
-        let mut intersect_map: HashMap<String, Vec<usize>> = HashMap::new();
-        with_index.values().iter().enumerate().for_each(|(i, val)| {
-            intersect_map
-                .entry(val.as_string())
-                .or_insert(vec![])
-                .push(i);
-        });
+        let from_slice = self.col_slice(
+            with.columns
+                .iter()
+                .map(|col| col.name())
+                .filter(|name| *name != on)
+                .collect(),
+        )?;
         // To prevent pushing index twice
         let with_slice = with.col_slice(
             with.columns
@@ -324,6 +275,18 @@ impl Dataframe {
                 .filter(|name| *name != on)
                 .collect(),
         )?;
+        if from_slice.match_count(&with_slice) > 0 {
+            return Err(MyErr::new(
+                "Join dataframe columns are not unique".to_string(),
+            ));
+        }
+        let mut intersect_map: HashMap<String, Vec<usize>> = HashMap::new();
+        with_index.values().iter().enumerate().for_each(|(i, val)| {
+            intersect_map
+                .entry(val.as_string())
+                .or_insert(vec![])
+                .push(i);
+        });
         let mut new_df = Dataframe {
             title: self.title.clone(),
             columns: vec![
@@ -332,7 +295,7 @@ impl Dataframe {
                     .map(|c| c.empty_from())
                     .collect::<Vec<Col>>(),
                 with_slice
-                    .columns
+                    .columns()
                     .iter()
                     .map(|c| c.empty_from())
                     .collect::<Vec<Col>>(),
@@ -350,7 +313,7 @@ impl Dataframe {
                             .push(col.values()[i].clone())
                     });
                     with_slice
-                        .columns
+                        .columns()
                         .iter()
                         .enumerate()
                         .for_each(|(col_j, col)| {
@@ -413,7 +376,7 @@ impl Dataframe {
                     .map(|c| c.empty_from())
                     .collect::<Vec<Col>>(),
                 with_slice
-                    .columns
+                    .columns()
                     .iter()
                     .map(|c| c.empty_from())
                     .collect::<Vec<Col>>(),
@@ -432,7 +395,7 @@ impl Dataframe {
                             .push(col.values()[*i].clone())
                     });
                     with_slice
-                        .columns
+                        .columns()
                         .iter()
                         .enumerate()
                         .for_each(|(col_j, col)| {
