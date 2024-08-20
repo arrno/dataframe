@@ -1,4 +1,4 @@
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, PartialOrd)]
 pub enum Cell {
     Int(i64),
     Uint(u32),

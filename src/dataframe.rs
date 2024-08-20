@@ -5,8 +5,14 @@ use crate::expression::*;
 use crate::row::*;
 use crate::util::*;
 use std::cmp::min;
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
+
+enum SortOrder {
+    Asc,
+    Desc,
+}
 
 pub struct Dataframe {
     title: String,
@@ -252,14 +258,8 @@ impl Dataframe {
 
     pub fn join(&self, with: &Dataframe, on: &str) -> Result<Self, MyErr> {
         // TODO protect against dup col names
-        let self_index = match self.columns.iter().find(|col| col.name() == on) {
-            Some(col) => col,
-            None => return Err(MyErr::new("join column not found on self.".to_string())),
-        };
-        let with_index = match with.columns.iter().find(|col| col.name() == on) {
-            Some(col) => col,
-            None => return Err(MyErr::new("join column not found on with.".to_string())),
-        };
+        let self_index = self.column(on)?;
+        let with_index = with.column(on)?;
         let from_slice = self.col_slice(
             with.columns
                 .iter()
@@ -329,14 +329,8 @@ impl Dataframe {
 
     pub fn zip_join(&self, with: &Dataframe, on: &str) -> Result<Self, MyErr> {
         // TODO protect against dup col names
-        let self_index = match self.columns.iter().find(|col| col.name() == on) {
-            Some(col) => col,
-            None => return Err(MyErr::new("join column not found on self.".to_string())),
-        };
-        let with_index = match with.columns.iter().find(|col| col.name() == on) {
-            Some(col) => col,
-            None => return Err(MyErr::new("join column not found on with.".to_string())),
-        };
+        let self_index = self.column(on)?;
+        let with_index = with.column(on)?;
         let mut intersect_map: HashMap<String, (Vec<usize>, Vec<usize>)> = HashMap::new();
         vec![self_index, with_index]
             .iter()
@@ -409,7 +403,51 @@ impl Dataframe {
         Ok(new_df)
     }
 
-    pub fn sort() {} // TODO
+    pub fn sort(&mut self, by: &str, order: SortOrder) -> Result<(), MyErr> {
+        let self_index = self.column_mut(&by)?;
+        let sort_instruct = self_index
+            .values()
+            .iter()
+            .enumerate()
+            .map(|(i, v)| {
+                if i == 0 {
+                    Ordering::Equal
+                } else {
+                    match order {
+                        SortOrder::Asc => {
+                            if self_index.values()[i - 1] > *v {
+                                Ordering::Greater
+                            } else {
+                                Ordering::Less
+                            }
+                        }
+                        SortOrder::Desc => {
+                            if self_index.values()[i - 1] > *v {
+                                Ordering::Less
+                            } else {
+                                Ordering::Greater
+                            }
+                        }
+                    }
+                }
+            })
+            .collect::<Vec<Ordering>>();
+        Ok(())
+    }
+
+    pub fn column(&self, name: &str) -> Result<&Col, MyErr> {
+        match self.columns.iter().find(|col| col.name() == name) {
+            Some(col) => Ok(col),
+            None => Err(MyErr::new("join column not found on self.".to_string())),
+        }
+    }
+
+    pub fn column_mut(&mut self, name: &str) -> Result<&mut Col, MyErr> {
+        match self.columns.iter_mut().find(|col| col.name() == name) {
+            Some(col) => Ok(col),
+            None => Err(MyErr::new("join column not found on self.".to_string())),
+        }
+    }
 
     pub fn concat(&mut self, with: Dataframe) -> Result<(), MyErr> {
         if !self.compare(&with) {

@@ -1,2 +1,4 @@
 sort
-from/to csv
+multi-sort
+dataslice parity
+more types
