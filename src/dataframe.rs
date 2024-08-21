@@ -256,26 +256,23 @@ impl Dataframe {
         match_count == self_map.len()
     }
 
+    pub fn match_count(&self, with: &Self) -> usize {
+        let self_map = self.type_map();
+        let with_map = with.type_map();
+        self_map
+            .iter()
+            .filter(|(k, _)| match with_map.get(k.as_str()) {
+                Some(_) => true,
+                _ => false,
+            })
+            .collect::<HashMap<&String, &()>>()
+            .len()
+    }
+
     pub fn join(&self, with: &Dataframe, on: &str) -> Result<Self, MyErr> {
-        // TODO protect against dup col names
         let self_index = self.column(on)?;
         let with_index = with.column(on)?;
-        let from_slice = self.col_slice(
-            with.columns
-                .iter()
-                .map(|col| col.name())
-                .filter(|name| *name != on)
-                .collect(),
-        )?;
-        // To prevent pushing index twice
-        let with_slice = with.col_slice(
-            with.columns
-                .iter()
-                .map(|col| col.name())
-                .filter(|name| *name != on)
-                .collect(),
-        )?;
-        if from_slice.match_count(&with_slice) > 0 {
+        if self.match_count(&with) != 1 {
             return Err(MyErr::new(
                 "Join dataframe columns are not unique".to_string(),
             ));
@@ -287,6 +284,14 @@ impl Dataframe {
                 .or_insert(vec![])
                 .push(i);
         });
+        // To prevent adding index twice
+        let with_slice = with.col_slice(
+            with.columns
+                .iter()
+                .map(|col| col.name())
+                .filter(|name| *name != on)
+                .collect(),
+        )?;
         let mut new_df = Dataframe {
             title: self.title.clone(),
             columns: vec![
