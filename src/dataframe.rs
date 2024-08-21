@@ -432,6 +432,13 @@ impl Dataframe {
                 }
             })
             .collect::<Vec<Ordering>>();
+        self.col_map_mut().iter_mut().for_each(|(_, col)| {
+            let mut idx = 0;
+            col.sort_by(|_, _| {
+                idx += 1;
+                sort_instruct[idx]
+            })
+        });
         Ok(())
     }
 
