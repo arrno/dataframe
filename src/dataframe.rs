@@ -9,7 +9,7 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-enum SortOrder {
+pub enum SortOrder {
     Asc,
     Desc,
 }
@@ -410,39 +410,36 @@ impl Dataframe {
 
     pub fn sort(&mut self, by: &str, order: SortOrder) -> Result<(), MyErr> {
         let self_index = self.column_mut(&by)?;
-        let sort_instruct = self_index
-            .values()
-            .iter()
-            .enumerate()
-            .map(|(i, v)| {
-                if i == 0 {
-                    Ordering::Equal
+        let mut sort_instructions = Vec::new();
+        self_index.values_mut().sort_by(|cur, prev| match order {
+            SortOrder::Asc => {
+                if cur > prev {
+                    sort_instructions.push(Ordering::Greater);
+                    Ordering::Greater
                 } else {
-                    match order {
-                        SortOrder::Asc => {
-                            if self_index.values()[i - 1] > *v {
-                                Ordering::Greater
-                            } else {
-                                Ordering::Less
-                            }
-                        }
-                        SortOrder::Desc => {
-                            if self_index.values()[i - 1] > *v {
-                                Ordering::Less
-                            } else {
-                                Ordering::Greater
-                            }
-                        }
-                    }
+                    sort_instructions.push(Ordering::Less);
+                    Ordering::Less
                 }
-            })
-            .collect::<Vec<Ordering>>();
-        self.col_map_mut().iter_mut().for_each(|(_, col)| {
+            }
+            SortOrder::Desc => {
+                if cur > prev {
+                    sort_instructions.push(Ordering::Less);
+                    Ordering::Less
+                } else {
+                    sort_instructions.push(Ordering::Greater);
+                    Ordering::Greater
+                }
+            }
+        });
+        self.col_map_mut().iter_mut().for_each(|(name, col)| {
             let mut idx = 0;
-            col.sort_by(|_, _| {
-                idx += 1;
-                sort_instruct[idx]
-            })
+            if name != by {
+                col.sort_by(|_, _| {
+                    let ord = sort_instructions[idx];
+                    idx += 1;
+                    ord
+                })
+            }
         });
         Ok(())
     }

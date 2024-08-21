@@ -157,7 +157,9 @@ pub fn main() {
         ]),
     )
     .unwrap();
-    df.head();
+    df.print();
+    df.sort("nums", SortOrder::Desc).unwrap();
+    df.print();
 }
 
 fn Person(name: String, age: u32, size: i64) -> MyStruct {
