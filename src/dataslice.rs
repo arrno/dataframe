@@ -17,7 +17,20 @@ impl<'a> DataSlice<'a> {
     pub fn print(&self) {
         Formatter::new().print(self);
     }
-
+    pub fn to_dataframe(&self) -> Dataframe {
+        Dataframe::new(self.title.to_string()).set_columns(
+            self.columns
+                .iter()
+                .map(|col| {
+                    Col::build(
+                        col.name().to_string(),
+                        col.values().iter().map(|val| val.clone()).collect(),
+                        col.typed().clone(),
+                    )
+                })
+                .collect(),
+        )
+    }
     pub fn title(&self) -> &'a str {
         self.title
     }

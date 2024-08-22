@@ -99,6 +99,11 @@ impl Dataframe {
             .collect()
     }
 
+    pub fn set_columns(mut self, cols: Vec<Col>) -> Self {
+        self.columns = cols;
+        self
+    }
+
     pub fn add_col<T>(&mut self, name: String, set: Vec<T>) -> Result<(), MyErr>
     where
         T: ToCell,
@@ -215,8 +220,12 @@ impl Dataframe {
         })
     }
 
+    pub fn to_slice(&self) -> DataSlice {
+        self.slice(0, self.length()).unwrap()
+    }
+
     pub fn slice(&self, start: usize, stop: usize) -> Result<DataSlice, MyErr> {
-        if start >= stop || stop > self.length() {
+        if start > stop || stop > self.length() {
             return Err(MyErr::new("Invalid slice params".to_string()));
         }
         Ok(DataSlice::new(
@@ -328,82 +337,6 @@ impl Dataframe {
                         });
                 })
             }
-        });
-        Ok(new_df)
-    }
-
-    pub fn zip_join(&self, with: &Dataframe, on: &str) -> Result<Self, MyErr> {
-        // TODO protect against dup col names
-        let self_index = self.column(on)?;
-        let with_index = with.column(on)?;
-        let mut intersect_map: HashMap<String, (Vec<usize>, Vec<usize>)> = HashMap::new();
-        vec![self_index, with_index]
-            .iter()
-            .enumerate()
-            .for_each(|(idx, set)| {
-                set.values().iter().enumerate().for_each(|(i, val)| {
-                    let val_string = val.as_string();
-                    let indices_op = intersect_map.get_mut(&val_string);
-                    if let Some(indices) = indices_op {
-                        if idx == 0 {
-                            indices.0.push(i);
-                        } else {
-                            indices.1.push(i);
-                        }
-                    } else {
-                        if idx == 0 {
-                            intersect_map.insert(val_string, (vec![i], vec![]));
-                        } else {
-                            intersect_map.insert(val_string, (vec![], vec![i]));
-                        }
-                    }
-                });
-            });
-        // To prevent pushing index twice
-        let with_slice = with.col_slice(
-            with.columns
-                .iter()
-                .map(|col| col.name())
-                .filter(|name| *name != on)
-                .collect(),
-        )?;
-        let mut new_df = Dataframe {
-            title: self.title.clone(),
-            columns: vec![
-                self.columns
-                    .iter()
-                    .map(|c| c.empty_from())
-                    .collect::<Vec<Col>>(),
-                with_slice
-                    .columns()
-                    .iter()
-                    .map(|c| c.empty_from())
-                    .collect::<Vec<Col>>(),
-            ]
-            .into_iter()
-            .flatten()
-            .collect::<Vec<Col>>(),
-        };
-        // This is an inner join
-        intersect_map.iter().for_each(|(key, indices)| {
-            indices.0.iter().for_each(|i| {
-                indices.1.iter().for_each(|j| {
-                    self.columns.iter().enumerate().for_each(|(col_i, col)| {
-                        new_df.columns[col_i]
-                            .values_mut()
-                            .push(col.values()[*i].clone())
-                    });
-                    with_slice
-                        .columns()
-                        .iter()
-                        .enumerate()
-                        .for_each(|(col_j, col)| {
-                            new_df.columns[self.columns.len() + col_j]
-                                .values_mut()
-                                .push(col.values()[*j].clone())
-                        });
-                })
-            })
         });
         Ok(new_df)
     }

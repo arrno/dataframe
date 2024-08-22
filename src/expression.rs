@@ -66,6 +66,34 @@ impl ExpU {
                     false
                 }
             }
+            Cell::Bool(v) => {
+                if let Cell::Bool(a) = against {
+                    match self.op {
+                        Op::Eq => v == a,
+                        Op::Neq => v != a,
+                        Op::Gt => *v && !a,
+                        Op::Lt => *a && !v,
+                        Op::IsNull => false,
+                        Op::NotNull => true,
+                    }
+                } else {
+                    false
+                }
+            }
+            Cell::Float(v) => {
+                if let Cell::Float(a) = against {
+                    match self.op {
+                        Op::Eq => v == a,
+                        Op::Neq => v != a,
+                        Op::Gt => a > v,
+                        Op::Lt => a < v,
+                        Op::IsNull => false,
+                        Op::NotNull => true,
+                    }
+                } else {
+                    false
+                }
+            }
             Cell::Null => {
                 if let Cell::Null = against {
                     match self.op {

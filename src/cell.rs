@@ -1,8 +1,11 @@
 #[derive(PartialEq, Clone, PartialOrd, Debug)]
 pub enum Cell {
     Int(i64),
-    Uint(u32),
+    Uint(u64),
     Str(String),
+    Bool(bool),
+    Float(f64),
+    // Time(time::SystemTime), // TODO
     Null,
 }
 impl Cell {
@@ -11,6 +14,8 @@ impl Cell {
             Cell::Int(_) => Cell::Int(0),
             Cell::Uint(_) => Cell::Uint(0),
             Cell::Str(_) => Cell::Str(String::new()),
+            Cell::Bool(_) => Cell::Bool(false),
+            Cell::Float(_) => Cell::Float(0.0),
             Cell::Null => Cell::Null,
         }
     }
@@ -19,6 +24,8 @@ impl Cell {
             Cell::Int(x) => format!("{x}"),
             Cell::Uint(x) => format!("{x}"),
             Cell::Str(x) => format!("{x}"),
+            Cell::Bool(x) => format!("{x}"),
+            Cell::Float(x) => format!("{x}"),
             Cell::Null => String::from("Null"),
         }
     }
@@ -27,6 +34,8 @@ impl Cell {
             Cell::Int(_) => String::from("Int"),
             Cell::Uint(_) => String::from("Uint"),
             Cell::Str(_) => String::from("Str"),
+            Cell::Bool(_) => String::from("Bool"),
+            Cell::Float(_) => String::from("Float"),
             Cell::Null => String::from("Null"),
         }
     }
@@ -45,6 +54,15 @@ pub trait ToCell {
 }
 
 impl ToCell for u32 {
+    fn to_cell(self) -> Cell {
+        Cell::Uint(self.into())
+    }
+    fn ref_to_cell(&self) -> Cell {
+        Cell::Uint(self.clone().into())
+    }
+}
+
+impl ToCell for u64 {
     fn to_cell(self) -> Cell {
         Cell::Uint(self)
     }
@@ -71,12 +89,47 @@ impl ToCell for i64 {
     }
 }
 
+impl ToCell for f32 {
+    fn to_cell(self) -> Cell {
+        Cell::Float(self.into())
+    }
+    fn ref_to_cell(&self) -> Cell {
+        Cell::Float(self.clone().into())
+    }
+}
+
+impl ToCell for f64 {
+    fn to_cell(self) -> Cell {
+        Cell::Float(self)
+    }
+    fn ref_to_cell(&self) -> Cell {
+        Cell::Float(self.clone())
+    }
+}
+
+impl ToCell for bool {
+    fn to_cell(self) -> Cell {
+        Cell::Bool(self)
+    }
+    fn ref_to_cell(&self) -> Cell {
+        Cell::Bool(self.clone())
+    }
+}
+
 impl ToCell for String {
     fn to_cell(self) -> Cell {
         Cell::Str(self)
     }
     fn ref_to_cell(&self) -> Cell {
         Cell::Str(self.clone())
+    }
+}
+impl ToCell for &str {
+    fn to_cell(self) -> Cell {
+        Cell::Str(self.to_string())
+    }
+    fn ref_to_cell(&self) -> Cell {
+        Cell::Str(self.to_string())
     }
 }
 
