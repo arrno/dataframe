@@ -94,6 +94,20 @@ impl ExpU {
                     false
                 }
             }
+            Cell::DateTime(v) => {
+                if let Cell::DateTime(a) = against {
+                    match self.op {
+                        Op::Eq => v == a,
+                        Op::Neq => v != a,
+                        Op::Gt => a > v,
+                        Op::Lt => a < v,
+                        Op::IsNull => false,
+                        Op::NotNull => true,
+                    }
+                } else {
+                    false
+                }
+            }
             Cell::Null => {
                 if let Cell::Null = against {
                     match self.op {

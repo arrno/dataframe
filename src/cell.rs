@@ -1,3 +1,5 @@
+use chrono::{NaiveDate, NaiveDateTime};
+
 #[derive(PartialEq, Clone, PartialOrd, Debug)]
 pub enum Cell {
     Int(i64),
@@ -5,7 +7,7 @@ pub enum Cell {
     Str(String),
     Bool(bool),
     Float(f64),
-    // Time(time::SystemTime), // TODO
+    DateTime(NaiveDateTime),
     Null,
 }
 impl Cell {
@@ -16,6 +18,12 @@ impl Cell {
             Cell::Str(_) => Cell::Str(String::new()),
             Cell::Bool(_) => Cell::Bool(false),
             Cell::Float(_) => Cell::Float(0.0),
+            Cell::DateTime(_) => Cell::DateTime(
+                NaiveDate::from_ymd_opt(30, 4, 3)
+                    .unwrap()
+                    .and_hms_opt(15, 0, 0)
+                    .unwrap(),
+            ),
             Cell::Null => Cell::Null,
         }
     }
@@ -26,6 +34,7 @@ impl Cell {
             Cell::Str(x) => format!("{x}"),
             Cell::Bool(x) => format!("{x}"),
             Cell::Float(x) => format!("{x}"),
+            Cell::DateTime(x) => format!("{x}"),
             Cell::Null => String::from("Null"),
         }
     }
@@ -36,6 +45,7 @@ impl Cell {
             Cell::Str(_) => String::from("Str"),
             Cell::Bool(_) => String::from("Bool"),
             Cell::Float(_) => String::from("Float"),
+            Cell::DateTime(_) => String::from("DateTime"),
             Cell::Null => String::from("Null"),
         }
     }
@@ -130,6 +140,15 @@ impl ToCell for &str {
     }
     fn ref_to_cell(&self) -> Cell {
         Cell::Str(self.to_string())
+    }
+}
+
+impl ToCell for NaiveDateTime {
+    fn to_cell(self) -> Cell {
+        Cell::DateTime(self)
+    }
+    fn ref_to_cell(&self) -> Cell {
+        Cell::DateTime(self.clone())
     }
 }
 

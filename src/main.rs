@@ -8,6 +8,7 @@ mod join;
 mod row;
 mod util;
 
+use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use std::collections::HashMap;
 
 use crate::cell::*;
@@ -16,6 +17,19 @@ use crate::expression::*;
 use crate::row::*;
 
 pub fn main() {
+    let dt: NaiveDateTime = NaiveDate::from_ymd_opt(0030, 4, 3)
+        .unwrap()
+        .and_hms_opt(15, 0, 0)
+        .unwrap();
+    let ndt: NaiveDateTime = NaiveDate::from_ymd_opt(0030, 4, 3)
+        .unwrap()
+        .and_hms_opt(15, 0, 0)
+        .unwrap();
+    println!("{dt}");
+    println!("{}", ndt == dt)
+}
+
+fn do_dataframe() {
     let mut df = Dataframe::new(String::from("Raw Data"));
     df.add_col("nums".to_string(), Vec::from([0, 1, 2, 3, 4, 5, 6, 7, 8]))
         .unwrap();
