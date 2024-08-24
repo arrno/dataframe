@@ -2,7 +2,7 @@ pub mod cell;
 mod column;
 pub mod dataframe;
 mod dataslice;
-mod expression;
+pub mod expression;
 mod format;
 mod join;
 mod row;

@@ -1,5 +1,6 @@
 use dataframe::cell::*;
 use dataframe::dataframe::*;
+use dataframe::expression::*;
 use dataframe::row;
 
 fn generic_dataframe() -> Dataframe {
@@ -85,7 +86,13 @@ fn slice_dataframe() {
 }
 
 // fn apply_dataframe() {}
-// fn filter_dataframe() {}
+fn filter_dataframe() {
+    let mut df = generic_dataframe();
+    df = df
+        .filter(ExpAnd(vec![Exp("nums", Gt(), 3), Exp("nums", Lt(), 7)]))
+        .unwrap();
+    df.print();
+}
 // fn concat_dataframe() {}
 // fn join_dataframe() {}
 // fn sort_dataframe() {}

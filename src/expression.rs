@@ -145,6 +145,16 @@ pub enum Exp {
     ExpU(ExpU),
 }
 
+pub fn ExpAnd(vexp: Vec<Exp>) -> Exp {
+    Exp::And(And::new(vexp))
+}
+pub fn ExpOr(vexp: Vec<Exp>) -> Exp {
+    Exp::Or(Or::new(vexp))
+}
+pub fn Exp<T: ToCell>(target: &str, op: Op, val: T) -> Exp {
+    Exp::ExpU(ExpU::new(target.to_string(), op, val))
+}
+
 impl Exp {
     pub fn evaluate(&self, against: &HashMap<String, &Cell>) -> bool {
         match self {
@@ -175,4 +185,23 @@ pub enum Op {
     Lt,
     IsNull,
     NotNull,
+}
+
+pub fn Eq() -> Op {
+    Op::Eq
+}
+pub fn Neq() -> Op {
+    Op::Neq
+}
+pub fn Gt() -> Op {
+    Op::Gt
+}
+pub fn Lt() -> Op {
+    Op::Lt
+}
+pub fn IsNull() -> Op {
+    Op::IsNull
+}
+pub fn NotNull() -> Op {
+    Op::NotNull
 }
