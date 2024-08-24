@@ -13,6 +13,12 @@ pub enum SortOrder {
     Asc,
     Desc,
 }
+pub fn Asc() -> SortOrder {
+    SortOrder::Asc
+}
+pub fn Desc() -> SortOrder {
+    SortOrder::Desc
+}
 
 #[derive(Debug, PartialEq)]
 pub struct Dataframe {

@@ -44,9 +44,11 @@ fn alt_dataframe() -> Dataframe {
         vec![
             row!(1, "Apple", 1),
             row!(2, "Pretzels", 12),
+            row!(2, "Banana", 1),
             row!(3, "Peanut", 20),
             row!(4, "Banana", 1),
             row!(5, "Chips", 12),
+            row!(6, "Orange", 1),
         ],
     )
     .unwrap()
@@ -146,6 +148,41 @@ fn concat_dataframe() {
     .unwrap();
     assert_eq!(df, expected_df);
 }
-// fn join_dataframe() {}
-// fn sort_dataframe() {}
+#[test]
+fn join_dataframe() {
+    let df = generic_dataframe();
+    let result_df = df.join(&alt_dataframe(), "id").unwrap();
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered", "snack", "count"],
+        vec![
+            row!(4, "Sally", 23, 700, true, "Banana", 1),
+            row!(1, "Jasper", 41, 900, false, "Apple", 1),
+            row!(5, "Jake", 33, 1200, true, "Chips", 12),
+            row!(2, "Susie", 27, 200, true, "Pretzels", 12),
+            row!(2, "Susie", 27, 200, true, "Banana", 1),
+            row!(3, "Spruce", 24, 800, false, "Peanut", 20),
+        ],
+    )
+    .unwrap();
+    assert_eq!(result_df, expected_df);
+}
+
+#[test]
+fn sort_dataframe() {
+    let mut df = generic_dataframe();
+    df.sort("id", Desc()).unwrap();
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![
+            row!(5, "Jake", 33, 1200, true),
+            row!(4, "Sally", 23, 700, true),
+            row!(3, "Spruce", 24, 800, false),
+            row!(2, "Susie", 27, 200, true),
+            row!(1, "Jasper", 41, 900, false),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
+}
+
 // option dataframe
