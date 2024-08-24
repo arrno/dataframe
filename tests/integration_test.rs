@@ -51,6 +51,7 @@ fn alt_dataframe() -> Dataframe {
     )
     .unwrap()
 }
+
 #[test]
 fn slice_dataframe() {
     let mut df = generic_dataframe();
@@ -85,14 +86,66 @@ fn slice_dataframe() {
     );
 }
 
-// fn apply_dataframe() {}
-fn filter_dataframe() {
-    let mut df = generic_dataframe();
-    df = df
-        .filter(ExpAnd(vec![Exp("nums", Gt(), 3), Exp("nums", Lt(), 7)]))
-        .unwrap();
-    df.print();
+#[test]
+fn apply_dataframe() {
+    let mut df = dataframe_extension();
+    df.col_mut("id").unwrap().iter_mut().for_each(|cell| {
+        if let Cell::Int(val) = cell {
+            *val *= 2
+        }
+    });
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![
+            row!(12, "Sasha", 33, 1600, false),
+            row!(14, "Jane", 24, 700, true),
+            row!(16, "Jerry", 39, 400, true),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
 }
-// fn concat_dataframe() {}
+
+#[test]
+fn filter_dataframe() {
+    let df = generic_dataframe()
+        .filter(ExpOr(vec![
+            ExpAnd(vec![Exp("id", Gt(), 2), Exp("score", Lt(), 1000)]),
+            Exp("registered", Eq(), false),
+        ]))
+        .unwrap();
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![
+            row!(4, "Sally", 23, 700, true),
+            row!(1, "Jasper", 41, 900, false),
+            row!(3, "Spruce", 24, 800, false),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
+}
+#[test]
+fn concat_dataframe() {
+    let mut df = generic_dataframe();
+    let concat_df = dataframe_extension();
+    df.concat(concat_df).unwrap();
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![
+            row!(4, "Sally", 23, 700, true),
+            row!(1, "Jasper", 41, 900, false),
+            row!(5, "Jake", 33, 1200, true),
+            row!(2, "Susie", 27, 200, true),
+            row!(3, "Spruce", 24, 800, false),
+            row!(6, "Sasha", 33, 1600, false),
+            row!(7, "Jane", 24, 700, true),
+            row!(8, "Jerry", 39, 400, true),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
+}
 // fn join_dataframe() {}
 // fn sort_dataframe() {}
+// option dataframe

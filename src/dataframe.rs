@@ -89,7 +89,7 @@ impl Dataframe {
     pub fn from_csv() {} // TODO
     pub fn to_csv() {} // TODO
 
-    pub fn col_mut(&mut self, name: String) -> Option<&mut Vec<Cell>> {
+    pub fn col_mut(&mut self, name: &str) -> Option<&mut Vec<Cell>> {
         self.columns
             .iter_mut()
             .find(|col| col.name() == name)?
