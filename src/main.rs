@@ -17,16 +17,15 @@ use crate::expression::*;
 use crate::row::*;
 
 pub fn main() {
-    let dt: NaiveDateTime = NaiveDate::from_ymd_opt(0030, 4, 3)
-        .unwrap()
-        .and_hms_opt(15, 0, 0)
-        .unwrap();
-    let ndt: NaiveDateTime = NaiveDate::from_ymd_opt(0030, 4, 3)
-        .unwrap()
-        .and_hms_opt(15, 0, 0)
-        .unwrap();
-    println!("{dt}");
-    println!("{}", ndt == dt)
+    let df = Dataframe::from_rows(
+        vec!["Name", "Age", "Score"],
+        vec![
+            row!("Jasper".to_string(), 10, 89),
+            row!("Jake".to_string(), 20, 11),
+            row!("Susan".to_string(), 44, 27),
+            row!("Sally".to_string(), 72, 109),
+        ],
+    );
 }
 
 fn do_dataframe() {
@@ -126,7 +125,7 @@ fn do_dataframe() {
     let join_df = df.join(&second_df, "nums").unwrap();
     join_df.print();
 
-    let df = Dataframe::from_rows(
+    let df = Dataframe::from_to_rows(
         vec!["one", "two", "three"],
         vec![
             Person("Jasper".to_string(), 10, 89),

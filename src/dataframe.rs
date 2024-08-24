@@ -34,7 +34,7 @@ impl Dataframe {
         &self.columns
     }
 
-    pub fn from_rows<T>(labels: Vec<&str>, rows: Vec<T>) -> Result<Self, MyErr>
+    pub fn from_to_rows<T>(labels: Vec<&str>, rows: Vec<T>) -> Result<Self, MyErr>
     where
         T: ToRow,
     {
@@ -45,6 +45,28 @@ impl Dataframe {
         let mut cols: Vec<Vec<Cell>> = labels.iter().map(|_| vec![]).collect();
         for row in rows.into_iter() {
             let cells = row.to_row();
+            if cells.len() != labels.len() {
+                return Err(MyErr::new("Inconsistent data shape".to_string()));
+            } else {
+                cells
+                    .into_iter()
+                    .enumerate()
+                    .for_each(|(i, cell)| cols[i].push(cell))
+            }
+        }
+        for (i, col) in cols.into_iter().enumerate() {
+            df.add_cell_col(labels[i].to_string(), col)?;
+        }
+        Ok(df)
+    }
+
+    pub fn from_rows(labels: Vec<&str>, rows: Vec<Vec<Cell>>) -> Result<Self, MyErr> {
+        let mut df = Self::new("dataframe".to_string());
+        if rows.len() == 0 {
+            return Ok(df);
+        }
+        let mut cols: Vec<Vec<Cell>> = labels.iter().map(|_| vec![]).collect();
+        for cells in rows.into_iter() {
             if cells.len() != labels.len() {
                 return Err(MyErr::new("Inconsistent data shape".to_string()));
             } else {
