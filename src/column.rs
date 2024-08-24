@@ -1,5 +1,6 @@
 use crate::cell::*;
 
+#[derive(Debug, PartialEq)]
 pub struct Col {
     name: String,
     values: Vec<Cell>,
@@ -52,6 +53,7 @@ impl Col {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct ColSlice<'a> {
     name: &'a str,
     values: &'a [Cell],

@@ -1,4 +1,3 @@
-dataslice parity
-time type
+join col name
 unit test
 doc

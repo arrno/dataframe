@@ -14,15 +14,19 @@ pub enum SortOrder {
     Desc,
 }
 
+#[derive(Debug, PartialEq)]
 pub struct Dataframe {
     title: String,
     columns: Vec<Col>,
 }
 
 impl Dataframe {
-    pub fn new(title: String) -> Self {
+    pub fn new(title: Option<&str>) -> Self {
         Dataframe {
-            title: title,
+            title: match title {
+                Some(v) => v.to_string(),
+                None => String::new(),
+            },
             columns: vec![],
         }
     }
@@ -38,7 +42,7 @@ impl Dataframe {
     where
         T: ToRow,
     {
-        let mut df = Self::new("dataframe".to_string());
+        let mut df = Self::new(None);
         if rows.len() == 0 {
             return Ok(df);
         }
@@ -61,7 +65,7 @@ impl Dataframe {
     }
 
     pub fn from_rows(labels: Vec<&str>, rows: Vec<Vec<Cell>>) -> Result<Self, MyErr> {
-        let mut df = Self::new("dataframe".to_string());
+        let mut df = Self::new(None);
         if rows.len() == 0 {
             return Ok(df);
         }
@@ -126,7 +130,7 @@ impl Dataframe {
         self
     }
 
-    pub fn add_col<T>(&mut self, name: String, set: Vec<T>) -> Result<(), MyErr>
+    pub fn add_col<T>(&mut self, name: &str, set: Vec<T>) -> Result<(), MyErr>
     where
         T: ToCell,
     {
@@ -139,13 +143,13 @@ impl Dataframe {
                 return Err(MyErr::new("Col names must be unique".to_string()));
             }
         }
-        self.columns.push(Col::new(name, set));
+        self.columns.push(Col::new(name.into(), set));
         Ok(())
     }
 
     pub fn add_cell_col(&mut self, name: String, set: Vec<Cell>) -> Result<(), MyErr> {
         let l = self.length();
-        if l == 0 || l != set.len() {
+        if l != 0 && l != set.len() {
             return Err(MyErr::new("Invalid col length".to_string()));
         }
         for col in self.columns.iter() {

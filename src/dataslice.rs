@@ -5,6 +5,7 @@ use crate::util::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
+#[derive(Debug, PartialEq)]
 pub struct DataSlice<'a> {
     title: &'a str,
     columns: Vec<ColSlice<'a>>,
@@ -18,7 +19,7 @@ impl<'a> DataSlice<'a> {
         Formatter::new().print(self);
     }
     pub fn to_dataframe(&self) -> Dataframe {
-        Dataframe::new(self.title.to_string()).set_columns(
+        Dataframe::new(Some(self.title)).set_columns(
             self.columns
                 .iter()
                 .map(|col| {
