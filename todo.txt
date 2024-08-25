@@ -1,3 +1,2 @@
-test datetime
-exp substring match, mod, GtEq, LtEq
+test datetime / mod / regex
 doc

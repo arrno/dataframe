@@ -1,4 +1,5 @@
 use crate::cell::*;
+use regex::Regex;
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -32,6 +33,10 @@ impl ExpU {
                         Op::Neq => v != a,
                         Op::Gt => a > v,
                         Op::Lt => a < v,
+                        Op::GtEq => a >= v,
+                        Op::LtEq => a <= v,
+                        Op::Mod(i) => a % i == *v,
+                        Op::Regex => false,
                     }
                 } else {
                     match self.op {
@@ -47,6 +52,10 @@ impl ExpU {
                         Op::Neq => v != a,
                         Op::Gt => a > v,
                         Op::Lt => a < v,
+                        Op::GtEq => a >= v,
+                        Op::LtEq => a <= v,
+                        Op::Mod(i) => *a as i64 % i == *v as i64,
+                        Op::Regex => false,
                     }
                 } else {
                     match self.op {
@@ -62,6 +71,20 @@ impl ExpU {
                         Op::Neq => v != a,
                         Op::Gt => a > v,
                         Op::Lt => a < v,
+                        Op::GtEq => a >= v,
+                        Op::LtEq => a <= v,
+                        Op::Mod(_) => false,
+                        Op::Regex => {
+                            let re = match Regex::new(v) {
+                                Ok(r) => r,
+                                Err(_) => return true, // if not valid regex, do not filter
+                            };
+                            if let Some(_) = re.captures(a) {
+                                true
+                            } else {
+                                false
+                            }
+                        }
                     }
                 } else {
                     match self.op {
@@ -75,8 +98,12 @@ impl ExpU {
                     match self.op {
                         Op::Eq => v == a,
                         Op::Neq => v != a,
-                        Op::Gt => *v && !a,
-                        Op::Lt => *a && !v,
+                        Op::Gt => !v && *a,
+                        Op::Lt => !a && *v,
+                        Op::GtEq => v == a || !v && *a,
+                        Op::LtEq => v == a || !a && *v,
+                        Op::Mod(_) => false,
+                        Op::Regex => false,
                     }
                 } else {
                     match self.op {
@@ -92,6 +119,10 @@ impl ExpU {
                         Op::Neq => v != a,
                         Op::Gt => a > v,
                         Op::Lt => a < v,
+                        Op::GtEq => a >= v,
+                        Op::LtEq => a <= v,
+                        Op::Mod(i) => *a % i as f64 == *v,
+                        Op::Regex => false,
                     }
                 } else {
                     match self.op {
@@ -107,6 +138,10 @@ impl ExpU {
                         Op::Neq => v != a,
                         Op::Gt => a > v,
                         Op::Lt => a < v,
+                        Op::GtEq => a >= v,
+                        Op::LtEq => a <= v,
+                        Op::Mod(_) => false,
+                        Op::Regex => false,
                     }
                 } else {
                     match self.op {
@@ -194,11 +229,10 @@ pub enum Op {
     Neq,
     Gt,
     Lt,
-    // TODO
-    // GtEq
-    // LtEq
-    // Mod(i64),
-    // SubStr(String),
+    GtEq,
+    LtEq,
+    Regex,
+    Mod(i64),
 }
 
 pub fn Eq() -> Op {
@@ -212,4 +246,16 @@ pub fn Gt() -> Op {
 }
 pub fn Lt() -> Op {
     Op::Lt
+}
+pub fn GtEq() -> Op {
+    Op::GtEq
+}
+pub fn LtEq() -> Op {
+    Op::LtEq
+}
+pub fn Mod(i: i64) -> Op {
+    Op::Mod(i)
+}
+pub fn Regex() -> Op {
+    Op::Regex
 }
