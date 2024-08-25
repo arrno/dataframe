@@ -1,6 +1,7 @@
 use crate::cell::*;
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct ExpU {
     target: String,
     op: Op,
@@ -31,8 +32,6 @@ impl ExpU {
                         Op::Neq => v != a,
                         Op::Gt => a > v,
                         Op::Lt => a < v,
-                        Op::IsNull => false,
-                        Op::NotNull => true,
                     }
                 } else {
                     false
@@ -45,8 +44,6 @@ impl ExpU {
                         Op::Neq => v != a,
                         Op::Gt => a > v,
                         Op::Lt => a < v,
-                        Op::IsNull => false,
-                        Op::NotNull => true,
                     }
                 } else {
                     false
@@ -59,8 +56,6 @@ impl ExpU {
                         Op::Neq => v != a,
                         Op::Gt => a > v,
                         Op::Lt => a < v,
-                        Op::IsNull => false,
-                        Op::NotNull => true,
                     }
                 } else {
                     false
@@ -73,8 +68,6 @@ impl ExpU {
                         Op::Neq => v != a,
                         Op::Gt => *v && !a,
                         Op::Lt => *a && !v,
-                        Op::IsNull => false,
-                        Op::NotNull => true,
                     }
                 } else {
                     false
@@ -87,8 +80,6 @@ impl ExpU {
                         Op::Neq => v != a,
                         Op::Gt => a > v,
                         Op::Lt => a < v,
-                        Op::IsNull => false,
-                        Op::NotNull => true,
                     }
                 } else {
                     false
@@ -101,21 +92,22 @@ impl ExpU {
                         Op::Neq => v != a,
                         Op::Gt => a > v,
                         Op::Lt => a < v,
-                        Op::IsNull => false,
-                        Op::NotNull => true,
                     }
                 } else {
                     false
                 }
             }
-            Cell::Null => {
-                if let Cell::Null = against {
+            Cell::Null(_) => {
+                if let Cell::Null(_) = against {
                     match self.op {
-                        Op::IsNull => true,
+                        Op::Eq => true,
                         _ => false,
                     }
                 } else {
-                    false
+                    match self.op {
+                        Op::Neq => true,
+                        _ => false,
+                    }
                 }
             }
         }
@@ -178,13 +170,15 @@ impl Exp {
     }
 }
 
+#[derive(Debug)]
 pub enum Op {
     Eq,
     Neq,
     Gt,
     Lt,
-    IsNull,
-    NotNull,
+    // TODO
+    // Mod(i64),
+    // SubStr(String),
 }
 
 pub fn Eq() -> Op {
@@ -198,10 +192,4 @@ pub fn Gt() -> Op {
 }
 pub fn Lt() -> Op {
     Op::Lt
-}
-pub fn IsNull() -> Op {
-    Op::IsNull
-}
-pub fn NotNull() -> Op {
-    Op::NotNull
 }

@@ -184,5 +184,28 @@ fn sort_dataframe() {
     .unwrap();
     assert_eq!(df, expected_df);
 }
+#[test]
+fn opt_dataframe() {
+    // Not Null
+    let mut df = option_dataframe();
+    let df = df.filter(Exp("age", Neq(), None::<i64>)).unwrap();
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![row!(7, "Jane", Some(24), 700, None::<bool>)],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
 
-// option dataframe
+    // Is Null
+    let mut df = option_dataframe();
+    let df = df.filter(Exp("age", Eq(), None::<i64>)).unwrap();
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![
+            row!(6, "Sasha", None::<i64>, 1600, Some(false)),
+            row!(8, "Jerry", None::<i64>, 400, Some(true)),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
+}

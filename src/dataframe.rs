@@ -170,7 +170,7 @@ impl Dataframe {
 
     pub fn add_opt_col<T>(&mut self, name: String, set: Vec<Option<T>>) -> Result<(), MyErr>
     where
-        T: ToCell,
+        T: ToCell + Clone + Default,
     {
         let l = self.length();
         if l != 0 && l != set.len() {
@@ -205,7 +205,7 @@ impl Dataframe {
 
     pub fn add_opt_row<T>(&mut self, set: Vec<Option<T>>) -> Result<(), MyErr>
     where
-        T: ToCell,
+        T: ToCell + Clone + Default,
     {
         if set.len() != self.columns.len() {
             return Err(MyErr::new("Invalid col length".to_string()));

@@ -12,7 +12,7 @@ impl Col {
     where
         T: ToCell,
     {
-        let mut z = Cell::Null;
+        let mut z = Cell::Null(Box::new(Cell::Int(0)));
         if set.len() > 0 {
             z = set[0].ref_to_cell().zero();
         }

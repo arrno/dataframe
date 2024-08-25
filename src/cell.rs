@@ -8,7 +8,7 @@ pub enum Cell {
     Bool(bool),
     Float(f64),
     DateTime(NaiveDateTime),
-    Null,
+    Null(Box<Cell>),
 }
 impl Cell {
     pub fn zero(&self) -> Self {
@@ -24,7 +24,7 @@ impl Cell {
                     .and_hms_opt(15, 0, 0)
                     .unwrap(),
             ),
-            Cell::Null => Cell::Null,
+            Cell::Null(cell) => cell.zero(),
         }
     }
     pub fn as_string(&self) -> String {
@@ -35,7 +35,7 @@ impl Cell {
             Cell::Bool(x) => format!("{x}"),
             Cell::Float(x) => format!("{x}"),
             Cell::DateTime(x) => format!("{x}"),
-            Cell::Null => String::from("Null"),
+            Cell::Null(_) => String::from("Null"),
         }
     }
     pub fn type_string(&self) -> String {
@@ -46,7 +46,7 @@ impl Cell {
             Cell::Bool(_) => String::from("Bool"),
             Cell::Float(_) => String::from("Float"),
             Cell::DateTime(_) => String::from("DateTime"),
-            Cell::Null => String::from("Null"),
+            Cell::Null(v) => format!("Null({})", v.type_string()),
         }
     }
     pub fn is_num(&self) -> bool {
@@ -152,17 +152,17 @@ impl ToCell for NaiveDateTime {
     }
 }
 
-impl<T: ToCell> ToCell for Option<T> {
+impl<T: ToCell + Default + Clone> ToCell for Option<T> {
     fn to_cell(self) -> Cell {
         match self {
             Some(val) => val.to_cell(),
-            None => Cell::Null,
+            None => Cell::Null(Box::new(self.unwrap_or_default().to_cell())),
         }
     }
     fn ref_to_cell(&self) -> Cell {
         match self {
             Some(val) => val.ref_to_cell(),
-            None => Cell::Null,
+            None => Cell::Null(Box::new(self.clone().unwrap_or_default().to_cell())),
         }
     }
 }
