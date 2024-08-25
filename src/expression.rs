@@ -34,7 +34,10 @@ impl ExpU {
                         Op::Lt => a < v,
                     }
                 } else {
-                    false
+                    match self.op {
+                        Op::Neq => true,
+                        _ => false,
+                    }
                 }
             }
             Cell::Uint(v) => {
@@ -46,7 +49,10 @@ impl ExpU {
                         Op::Lt => a < v,
                     }
                 } else {
-                    false
+                    match self.op {
+                        Op::Neq => true,
+                        _ => false,
+                    }
                 }
             }
             Cell::Str(v) => {
@@ -58,7 +64,10 @@ impl ExpU {
                         Op::Lt => a < v,
                     }
                 } else {
-                    false
+                    match self.op {
+                        Op::Neq => true,
+                        _ => false,
+                    }
                 }
             }
             Cell::Bool(v) => {
@@ -70,7 +79,10 @@ impl ExpU {
                         Op::Lt => *a && !v,
                     }
                 } else {
-                    false
+                    match self.op {
+                        Op::Neq => true,
+                        _ => false,
+                    }
                 }
             }
             Cell::Float(v) => {
@@ -82,7 +94,10 @@ impl ExpU {
                         Op::Lt => a < v,
                     }
                 } else {
-                    false
+                    match self.op {
+                        Op::Neq => true,
+                        _ => false,
+                    }
                 }
             }
             Cell::DateTime(v) => {
@@ -94,7 +109,10 @@ impl ExpU {
                         Op::Lt => a < v,
                     }
                 } else {
-                    false
+                    match self.op {
+                        Op::Neq => true,
+                        _ => false,
+                    }
                 }
             }
             Cell::Null(_) => {
@@ -177,6 +195,8 @@ pub enum Op {
     Gt,
     Lt,
     // TODO
+    // GtEq
+    // LtEq
     // Mod(i64),
     // SubStr(String),
 }

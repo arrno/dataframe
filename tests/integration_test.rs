@@ -126,7 +126,18 @@ fn filter_dataframe() {
     )
     .unwrap();
     assert_eq!(df, expected_df);
+
+    let df = generic_dataframe()
+        .filter(ExpAnd(vec![Exp("id", Gt(), 2), Exp("id", Lt(), 4)]))
+        .unwrap();
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![row!(3, "Spruce", 24, 800, false)],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
 }
+
 #[test]
 fn concat_dataframe() {
     let mut df = generic_dataframe();
@@ -151,7 +162,7 @@ fn concat_dataframe() {
 #[test]
 fn join_dataframe() {
     let df = generic_dataframe();
-    let result_df = df.join(&alt_dataframe(), "id").unwrap();
+    let result_df = df.join(&alt_dataframe(), ("id", "id")).unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered", "snack", "count"],
         vec![

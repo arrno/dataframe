@@ -310,10 +310,11 @@ impl Dataframe {
             .len()
     }
 
-    pub fn join(&self, with: &Dataframe, on: &str) -> Result<Self, MyErr> {
-        let self_index = self.column(on)?;
-        let with_index = with.column(on)?;
-        if self.match_count(&with) != 1 {
+    pub fn join(&self, with: &Dataframe, on: (&str, &str)) -> Result<Self, MyErr> {
+        let self_index = self.column(on.0)?;
+        let with_index = with.column(on.1)?;
+        let match_count = self.match_count(&with);
+        if (on.0 == on.1 && match_count != 1) || (on.0 != on.1 && match_count != 0) {
             return Err(MyErr::new(
                 "Join dataframe columns are not unique".to_string(),
             ));
@@ -330,7 +331,7 @@ impl Dataframe {
             with.columns
                 .iter()
                 .map(|col| col.name())
-                .filter(|name| *name != on)
+                .filter(|name| *name != on.1)
                 .collect(),
         )?;
         let mut new_df = Dataframe {
@@ -421,6 +422,24 @@ impl Dataframe {
             Some(col) => Ok(col),
             None => Err(MyErr::new("join column not found on self.".to_string())),
         }
+    }
+
+    pub fn cell(&mut self, loc: (usize, &str)) -> Option<&Cell> {
+        if let Ok(col) = self.column_mut(loc.1) {
+            if col.values().len() >= loc.0 {
+                return Some(&col.values_mut()[loc.0]);
+            }
+        }
+        None
+    }
+
+    pub fn cell_mut(&mut self, loc: (usize, &str)) -> Option<&mut Cell> {
+        if let Ok(col) = self.column_mut(loc.1) {
+            if col.values().len() >= loc.0 {
+                return Some(&mut col.values_mut()[loc.0]);
+            }
+        }
+        None
     }
 
     pub fn concat(&mut self, with: Dataframe) -> Result<(), MyErr> {
