@@ -190,13 +190,13 @@ pub enum Exp {
     ExpU(ExpU),
 }
 
-pub fn ExpAnd(vexp: Vec<Exp>) -> Exp {
+pub fn and(vexp: Vec<Exp>) -> Exp {
     Exp::And(And::new(vexp))
 }
-pub fn ExpOr(vexp: Vec<Exp>) -> Exp {
+pub fn or(vexp: Vec<Exp>) -> Exp {
     Exp::Or(Or::new(vexp))
 }
-pub fn Exp<T: ToCell>(target: &str, op: Op, val: T) -> Exp {
+pub fn exp<T: ToCell>(target: &str, op: Op, val: T) -> Exp {
     Exp::ExpU(ExpU::new(target.to_string(), op, val))
 }
 
@@ -235,27 +235,27 @@ pub enum Op {
     Mod(i64),
 }
 
-pub fn Eq() -> Op {
+pub fn eq() -> Op {
     Op::Eq
 }
-pub fn Neq() -> Op {
+pub fn neq() -> Op {
     Op::Neq
 }
-pub fn Gt() -> Op {
+pub fn gt() -> Op {
     Op::Gt
 }
-pub fn Lt() -> Op {
+pub fn lt() -> Op {
     Op::Lt
 }
-pub fn GtEq() -> Op {
+pub fn gte() -> Op {
     Op::GtEq
 }
-pub fn LtEq() -> Op {
+pub fn lte() -> Op {
     Op::LtEq
 }
-pub fn Mod(i: i64) -> Op {
+pub fn modl(i: i64) -> Op {
     Op::Mod(i)
 }
-pub fn Regex() -> Op {
+pub fn regx() -> Op {
     Op::Regex
 }

@@ -16,7 +16,7 @@ impl<'a> DataSlice<'a> {
         Self { title, columns }
     }
     pub fn print(&self) {
-        Formatter::new().print(self);
+        TableFormatter::new().print(self);
     }
     pub fn to_dataframe(&self) -> Dataframe {
         Dataframe::new(Some(self.title)).set_columns(

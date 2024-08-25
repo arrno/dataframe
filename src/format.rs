@@ -2,17 +2,17 @@ use crate::dataslice::*;
 use crate::util::*;
 use std::cmp::{max, min};
 
-pub trait formatter {
-    fn print(&self);
-}
+// pub trait Formatter {
+//     fn print(&self);
+// }
 
-pub struct Formatter {
+pub struct TableFormatter {
     max_cell_display: usize,
 }
 
-impl Formatter {
+impl TableFormatter {
     pub fn new() -> Self {
-        Formatter {
+        TableFormatter {
             max_cell_display: MAX_CELL_DISPLAY,
         }
     }

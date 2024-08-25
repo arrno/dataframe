@@ -13,10 +13,10 @@ pub enum SortOrder {
     Asc,
     Desc,
 }
-pub fn Asc() -> SortOrder {
+pub fn asc() -> SortOrder {
     SortOrder::Asc
 }
-pub fn Desc() -> SortOrder {
+pub fn desc() -> SortOrder {
     SortOrder::Desc
 }
 
@@ -221,7 +221,7 @@ impl Dataframe {
         Ok(())
     }
 
-    pub fn filter(&mut self, mut exp: Exp) -> Result<Self, MyErr> {
+    pub fn filter(&mut self, exp: Exp) -> Result<Self, MyErr> {
         let col_map = self.col_map();
         let filter_set = (0..self.length())
             .map(|i| {

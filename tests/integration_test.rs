@@ -56,7 +56,7 @@ fn alt_dataframe() -> Dataframe {
 
 #[test]
 fn slice_dataframe() {
-    let mut df = generic_dataframe();
+    let df = generic_dataframe();
     // Slice by row
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],
@@ -111,9 +111,9 @@ fn apply_dataframe() {
 #[test]
 fn filter_dataframe() {
     let df = generic_dataframe()
-        .filter(ExpOr(vec![
-            ExpAnd(vec![Exp("id", Gt(), 2), Exp("score", Lt(), 1000)]),
-            Exp("registered", Eq(), false),
+        .filter(or(vec![
+            and(vec![exp("id", gt(), 2), exp("score", lt(), 1000)]),
+            exp("registered", eq(), false),
         ]))
         .unwrap();
     let expected_df = Dataframe::from_rows(
@@ -128,7 +128,7 @@ fn filter_dataframe() {
     assert_eq!(df, expected_df);
 
     let df = generic_dataframe()
-        .filter(ExpAnd(vec![Exp("id", Gt(), 2), Exp("id", Lt(), 4)]))
+        .filter(and(vec![exp("id", gt(), 2), exp("id", lt(), 4)]))
         .unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],
@@ -181,7 +181,7 @@ fn join_dataframe() {
 #[test]
 fn sort_dataframe() {
     let mut df = generic_dataframe();
-    df.sort("id", Desc()).unwrap();
+    df.sort("id", desc()).unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],
         vec![
@@ -199,7 +199,7 @@ fn sort_dataframe() {
 fn opt_dataframe() {
     // Not Null
     let mut df = option_dataframe();
-    let df = df.filter(Exp("age", Neq(), None::<i64>)).unwrap();
+    let df = df.filter(exp("age", neq(), None::<i64>)).unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],
         vec![row!(7, "Jane", Some(24), 700, None::<bool>)],
@@ -209,7 +209,7 @@ fn opt_dataframe() {
 
     // Is Null
     let mut df = option_dataframe();
-    let df = df.filter(Exp("age", Eq(), None::<i64>)).unwrap();
+    let df = df.filter(exp("age", eq(), None::<i64>)).unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],
         vec![

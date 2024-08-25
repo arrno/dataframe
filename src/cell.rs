@@ -51,8 +51,8 @@ impl Cell {
     }
     pub fn is_num(&self) -> bool {
         match self {
-            Cell::Int(x) => true,
-            Cell::Uint(x) => true,
+            Cell::Int(_) => true,
+            Cell::Uint(_) => true,
             _ => false,
         }
     }
