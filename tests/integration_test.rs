@@ -53,6 +53,17 @@ fn alt_dataframe() -> Dataframe {
     )
     .unwrap()
 }
+fn time_dataframe() -> Dataframe {
+    Dataframe::from_rows(
+        vec!["id", "name", "at"],
+        vec![
+            row!(2, "Noon", Timestamp(2024, 8, 26, 12, 15, 0)),
+            row!(3, "Night", Timestamp(2024, 8, 26, 22, 45, 0)),
+            row!(1, "Morning", Timestamp(2024, 8, 26, 8, 5, 0)),
+        ],
+    )
+    .unwrap()
+}
 
 #[test]
 fn slice_dataframe() {
@@ -68,6 +79,7 @@ fn slice_dataframe() {
     )
     .unwrap();
     assert_eq!(df.slice(1, 4).unwrap().to_dataframe(), expected_df);
+
     // Slice by column
     let expected_df = Dataframe::from_rows(
         vec!["name", "age", "registered"],
@@ -110,6 +122,7 @@ fn apply_dataframe() {
 
 #[test]
 fn filter_dataframe() {
+    // complex expressions
     let df = generic_dataframe()
         .filter(or(vec![
             and(vec![exp("id", gt(), 2), exp("score", lt(), 1000)]),
@@ -127,12 +140,39 @@ fn filter_dataframe() {
     .unwrap();
     assert_eq!(df, expected_df);
 
+    // multi filter same col
     let df = generic_dataframe()
         .filter(and(vec![exp("id", gt(), 2), exp("id", lt(), 4)]))
         .unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],
         vec![row!(3, "Spruce", 24, 800, false)],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
+
+    // mod
+    let df = generic_dataframe().filter(exp("id", modl(2), 0)).unwrap();
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![
+            row!(4, "Sally", 23, 700, true),
+            row!(2, "Susie", 27, 200, true),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
+
+    // regex
+    let df = generic_dataframe()
+        .filter(exp("name", regx(), "^J"))
+        .unwrap();
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![
+            row!(1, "Jasper", 41, 900, false),
+            row!(5, "Jake", 33, 1200, true),
+        ],
     )
     .unwrap();
     assert_eq!(df, expected_df);
@@ -159,6 +199,7 @@ fn concat_dataframe() {
     .unwrap();
     assert_eq!(df, expected_df);
 }
+
 #[test]
 fn join_dataframe() {
     let df = generic_dataframe();
@@ -194,7 +235,22 @@ fn sort_dataframe() {
     )
     .unwrap();
     assert_eq!(df, expected_df);
+
+    // asc by timestamp
+    let mut df = time_dataframe();
+    df.sort("at", asc()).unwrap();
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "at"],
+        vec![
+            row!(1, "Morning", Timestamp(2024, 8, 26, 8, 5, 0)),
+            row!(2, "Noon", Timestamp(2024, 8, 26, 12, 15, 0)),
+            row!(3, "Night", Timestamp(2024, 8, 26, 22, 45, 0)),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
 }
+
 #[test]
 fn opt_dataframe() {
     // Not Null

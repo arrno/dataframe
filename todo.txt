@@ -1,2 +1,1 @@
-test datetime / mod / regex
-doc
+do readme doc

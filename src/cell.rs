@@ -172,3 +172,24 @@ impl<T: ToCell> From<T> for Cell {
         val.to_cell()
     }
 }
+
+pub struct Timestamp(pub i32, pub u32, pub u32, pub u32, pub u32, pub u32);
+
+impl ToCell for Timestamp {
+    fn to_cell(self) -> Cell {
+        Cell::DateTime(
+            NaiveDate::from_ymd_opt(self.0, self.1, self.2)
+                .unwrap()
+                .and_hms_opt(self.3, self.4, self.5)
+                .unwrap(),
+        )
+    }
+    fn ref_to_cell(&self) -> Cell {
+        Cell::DateTime(
+            NaiveDate::from_ymd_opt(self.0, self.1, self.2)
+                .unwrap()
+                .and_hms_opt(self.3, self.4, self.5)
+                .unwrap(),
+        )
+    }
+}
