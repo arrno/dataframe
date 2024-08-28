@@ -1,3 +1,6 @@
+use serde::Deserialize;
+use std::fs::File;
+
 use crate::cell::*;
 use crate::column::*;
 use crate::dataslice::*;
@@ -92,7 +95,30 @@ impl Dataframe {
         Ok(df)
     }
 
-    pub fn from_csv() {} // TODO
+    pub fn from_csv<T>(file_path: &str) -> Result<Self, MyErr>
+    where
+        for<'a> T: ToRow + Deserialize<'a>,
+    {
+        let mut rows: Vec<Vec<Cell>> = Vec::new();
+        let mut labels = vec![];
+        let file = match File::open(file_path) {
+            Ok(f) => f,
+            Err(e) => return Err(MyErr::new(e.to_string())),
+        };
+        let mut reader = csv::Reader::from_reader(file);
+        for record in reader.deserialize() {
+            let record: T = match record {
+                Ok(r) => r,
+                Err(e) => return Err(MyErr::new(e.to_string())),
+            };
+            rows.push(record.to_row());
+            if labels.len() == 0 {
+                labels = record.labels();
+            }
+        }
+        Self::from_rows(labels.iter().map(|l| l.as_str()).collect(), rows)
+    }
+
     pub fn to_csv() {} // TODO
 
     pub fn col_mut(&mut self, name: &str) -> Option<&mut Vec<Cell>> {

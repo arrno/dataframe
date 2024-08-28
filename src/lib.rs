@@ -5,5 +5,5 @@ mod dataslice;
 pub mod expression;
 mod format;
 mod join;
-mod row;
+pub mod row;
 mod util;

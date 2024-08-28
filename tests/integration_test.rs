@@ -1,7 +1,10 @@
+use serde::{Deserialize, Serialize};
+
 use dataframe::cell::*;
 use dataframe::dataframe::*;
 use dataframe::expression::*;
 use dataframe::row;
+use dataframe::row::ToRow;
 
 fn generic_dataframe() -> Dataframe {
     Dataframe::from_rows(
@@ -275,4 +278,35 @@ fn opt_dataframe() {
     )
     .unwrap();
     assert_eq!(df, expected_df);
+}
+
+#[test]
+fn csv_dataframe() {
+    let df = Dataframe::from_csv::<MyRow>("./tests/test.csv").unwrap();
+    let expected_df = Dataframe::from_rows(
+        vec!["name", "age", "val"],
+        vec![
+            row!("Jake", 23, true),
+            row!("Sally", 44, false),
+            row!("Jasper", 61, true),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
+}
+
+#[derive(Serialize, Deserialize)]
+struct MyRow {
+    name: String,
+    age: i64,
+    val: bool,
+}
+
+impl ToRow for MyRow {
+    fn to_row(&self) -> Vec<Cell> {
+        vec![self.name.as_str().into(), self.age.into(), self.val.into()]
+    }
+    fn labels(&self) -> Vec<String> {
+        vec!["name".to_string(), "age".to_string(), "val".to_string()]
+    }
 }
