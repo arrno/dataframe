@@ -45,6 +45,39 @@ impl ToRow for MyRow {
 
 let df = Dataframe::from_csv::<MyRow>("./tests/test.csv").unwrap();
 ```
+**With null values**
+```rust
+let df = Dataframe::from_rows(
+    vec!["name", "age", "score", "val"],
+    vec![
+        row!("Sasha", None::<i64>, 160, Some(false)),
+        row!("Jane", Some(24), 70, None::<bool>),
+        row!("Jerry", None::<i64>, 40, Some(true)),
+    ],
+)
+.unwrap();
+```
+**With timestamp**
+```rust
+let df = Dataframe::from_rows(
+    vec!["id", "label", "at"],
+    vec![
+        row!(2, "Noon", Timestamp(2024, 8, 26, 12, 15, 0)),
+        row!(3, "Night", Timestamp(2024, 8, 26, 22, 45, 0)),
+        row!(1, "Morning", Timestamp(2024, 8, 26, 8, 5, 0)),
+    ],
+)
+.unwrap();
+```
+**Supported types**
+- String
+- Int
+- Uint
+- Float
+- Bool
+- Option/Null
+- chrono::NaiveDateTime
+
 ## Display
 ```rust
 df.print();
@@ -94,21 +127,58 @@ let result_df = df
 ## Slice
 **By index**
 ```rust
+// to_dataframe copies DataSlice into new Dataframe
+df.slice(1, 4).unwrap().to_dataframe();
 ```
 **By column**
 ```rust
+df.col_slice(["name", "age"].into())
+    .unwrap()
+    .to_dataframe();
 ```
 ## Filter
 **Simple**
 ```rust
+let df = df.filter(exp("age", neq(), None::<i64>)).unwrap();
 ```
 **Complex**
+
 Nest as many or/add/exp as needed
 ```rust
+let filtered_df = df
+    .filter(or(
+        vec![
+            and(
+                vec![
+                    exp("id", gt(), 2), 
+                    exp("score", lt(), 1000)
+                ]
+            ),
+            exp("val", eq(), false),
+        ]
+    ))
+    .unwrap();
 ```
+Supported expression operations:
+- `eq()` equal
+- `neq()` not equal
+- `gt()` greater than
+- `lt()` less than
+- `gte()` greater or equal than
+- `lte()` less or equal than
+- `modl(i: i64)` mod `i` is
+- `regx()` matches regex
+
 ## Mutate
 ```rust
+df.col_mut("id").unwrap().iter_mut().for_each(|cell| {
+    if let Cell::Int(val) = cell {
+        *val *= 2
+    }
+});
 ```
 ## Sort
 ```rust
+// sort by, sort dir [asc() | desc()]
+df.sort("at", asc()).unwrap();
 ```
