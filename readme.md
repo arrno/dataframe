@@ -146,17 +146,10 @@ let df = df.filter(exp("age", neq(), None::<i64>)).unwrap();
 Nest as many or/add/exp as needed
 ```rust
 let filtered_df = df
-    .filter(or(
-        vec![
-            and(
-                vec![
-                    exp("id", gt(), 2), 
-                    exp("score", lt(), 1000)
-                ]
-            ),
-            exp("val", eq(), false),
-        ]
-    ))
+    .filter(or(vec![
+        and(vec![exp("id", gt(), 2), exp("score", lt(), 1000)]),
+        exp("val", eq(), false),
+    ]))
     .unwrap();
 ```
 Supported expression operations:
