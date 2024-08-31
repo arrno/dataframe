@@ -18,24 +18,11 @@ macro_rules! row {
     };
 }
 
-// #[macro_export]
-// macro_rules! zoom_and_enhance {
-//     (struct $name:ident { $($fname:ident : $ftype:ty),* }) => {
-//         struct $name {
-//             $($fname : $ftype),*
-//         }
-
-//         impl $name {
-//             fn field_names() -> &'static [&'static str] {
-//                 static NAMES: &'static [&'static str] = &[$(stringify!($fname)),*];
-//                 NAMES
-//             }
-//         }
-
-//         impl ToRow for $name {
-//             fn to_row(self) -> Vec<Cell> {
-
-//             }
-//         }
+// impl ToRow for MyRow {
+//     fn to_row(&self) -> Vec<Cell> {
+//         vec![self.name.as_str().into(), self.age.into(), self.val.into()]
+//     }
+//     fn labels(&self) -> Vec<String> {
+//         vec!["name".to_string(), "age".to_string(), "val".to_string()]
 //     }
 // }

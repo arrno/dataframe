@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use dataframe_macros::ToRow;
+use serde::Deserialize;
 
 use dataframe::cell::*;
 use dataframe::dataframe::*;
@@ -280,6 +281,13 @@ fn opt_dataframe() {
     assert_eq!(df, expected_df);
 }
 
+#[derive(Deserialize, ToRow)]
+struct MyRow {
+    name: String,
+    age: i64,
+    val: bool,
+}
+
 #[test]
 fn csv_dataframe() {
     let df = Dataframe::from_csv::<MyRow>("./tests/test.csv").unwrap();
@@ -293,20 +301,4 @@ fn csv_dataframe() {
     )
     .unwrap();
     assert_eq!(df, expected_df);
-}
-
-#[derive(Serialize, Deserialize)]
-struct MyRow {
-    name: String,
-    age: i64,
-    val: bool,
-}
-
-impl ToRow for MyRow {
-    fn to_row(&self) -> Vec<Cell> {
-        vec![self.name.as_str().into(), self.age.into(), self.val.into()]
-    }
-    fn labels(&self) -> Vec<String> {
-        vec!["name".to_string(), "age".to_string(), "val".to_string()]
-    }
 }

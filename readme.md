@@ -26,14 +26,20 @@ let df = Dataframe::from_rows(
 .unwrap();
 ```
 **Create from csv**
+
+With ToRow proc-macro
 ```rust
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize, ToRow)]
 struct MyRow {
     name: String,
     score: i64,
     val: bool,
 }
 
+let df = Dataframe::from_csv::<MyRow>("./tests/test.csv").unwrap();
+```
+Or implement ToRow manually
+```rust
 impl ToRow for MyRow {
     fn to_row(&self) -> Vec<Cell> {
         vec![self.name.as_str().into(), self.age.into(), self.val.into()]
@@ -42,8 +48,6 @@ impl ToRow for MyRow {
         vec!["name".to_string(), "age".to_string(), "val".to_string()]
     }
 }
-
-let df = Dataframe::from_csv::<MyRow>("./tests/test.csv").unwrap();
 ```
 **With null values**
 ```rust
@@ -145,7 +149,7 @@ let df = df.filter(exp("age", neq(), None::<i64>)).unwrap();
 
 Nest as many or/add/exp as needed
 ```rust
-let filtered_df = df
+let df = df
     .filter(or(vec![
         and(vec![exp("id", gt(), 2), exp("score", lt(), 1000)]),
         exp("val", eq(), false),
