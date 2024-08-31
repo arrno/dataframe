@@ -1,4 +1,6 @@
+use csv::Writer;
 use serde::Deserialize;
+use std::error::Error;
 use std::fs::File;
 
 use crate::cell::*;
@@ -119,7 +121,25 @@ impl Dataframe {
         Self::from_rows(labels.iter().map(|l| l.as_str()).collect(), rows)
     }
 
-    pub fn to_csv() {} // TODO
+    pub fn to_csv(&self, file_path: &str) -> Result<(), Box<dyn Error>> {
+        let mut wtr = Writer::from_path(file_path)?;
+        wtr.write_record(
+            self.columns
+                .iter()
+                .map(|col| col.name().to_string())
+                .collect::<Vec<String>>(),
+        )?;
+        for i in 0..self.length() {
+            wtr.write_record(
+                self.columns
+                    .iter()
+                    .map(|col| col.values()[i].as_string())
+                    .collect::<Vec<String>>(),
+            )?;
+        }
+        wtr.flush()?;
+        Ok(())
+    }
 
     pub fn col_mut(&mut self, name: &str) -> Option<&mut Vec<Cell>> {
         self.columns

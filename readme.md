@@ -140,6 +140,11 @@ df.col_slice(["name", "age"].into())
     .unwrap()
     .to_dataframe();
 ```
+**Get cell**
+```rust
+// (row_index, col_name)
+let cell = df.cell(1, "score").unwrap();
+```
 ## Filter
 **Simple**
 ```rust
@@ -178,4 +183,9 @@ df.col_mut("id").unwrap().iter_mut().for_each(|cell| {
 ```rust
 // sort by, sort dir [asc() | desc()]
 df.sort("at", asc()).unwrap();
+```
+## Save
+**To csv**
+```rust
+df.to_csv("./tests/test.csv").unwrap();
 ```

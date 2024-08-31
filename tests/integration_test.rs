@@ -102,6 +102,9 @@ fn slice_dataframe() {
             .to_dataframe(),
         expected_df
     );
+
+    let mut mut_df = generic_dataframe();
+    assert_eq!(mut_df.cell((2, "age")).unwrap(), &33.to_cell());
 }
 
 #[test]
@@ -301,4 +304,6 @@ fn csv_dataframe() {
     )
     .unwrap();
     assert_eq!(df, expected_df);
+
+    df.to_csv("./tests/new_test.csv").unwrap();
 }
