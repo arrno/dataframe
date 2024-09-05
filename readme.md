@@ -184,7 +184,17 @@ df.col_mut("id").unwrap().iter_mut().for_each(|cell| {
 // sort by, sort dir [asc() | desc()]
 df.sort("at", asc()).unwrap();
 ```
-## Save
+## Iterate
+```rust
+let unames = df
+    .iter()
+    .map(|row| match row.get("username") {
+        Some(Cell::Str(val)) => val,
+        _ => "None",
+    })
+    .collect::<Vec<&str>>();
+```
+## Store
 **To csv**
 ```rust
 df.to_csv("./tests/test.csv").unwrap();

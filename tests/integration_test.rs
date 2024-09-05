@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use dataframe_macros::ToRow;
 use serde::Deserialize;
 
@@ -311,8 +313,39 @@ fn csv_dataframe() {
 
 #[test]
 fn iterrows() {
-    let df = generic_dataframe();
-    df.iter().for_each(|row| {
-        print!("{:?}", row);
+    let df = dataframe_extension();
+    df.iter().enumerate().for_each(|(i, row)| match i {
+        0 => {
+            let mut map: HashMap<String, &Cell> = HashMap::new();
+            let name = "Sasha".to_cell();
+            map.insert(String::from("id"), &Cell::Int(6));
+            map.insert(String::from("name"), &name);
+            map.insert(String::from("age"), &Cell::Int(33));
+            map.insert(String::from("score"), &Cell::Int(1600));
+            map.insert(String::from("registered"), &Cell::Bool(false));
+            assert_eq!(row, map);
+        }
+        1 => {
+            let mut map: HashMap<String, &Cell> = HashMap::new();
+            let name = "Jane".to_cell();
+            map.insert(String::from("id"), &Cell::Int(7));
+            map.insert(String::from("name"), &name);
+            map.insert(String::from("age"), &Cell::Int(24));
+            map.insert(String::from("score"), &Cell::Int(700));
+            map.insert(String::from("registered"), &Cell::Bool(true));
+            assert_eq!(row, map);
+        }
+        2 => {
+            let mut map: HashMap<String, &Cell> = HashMap::new();
+            let name = "Jerry".to_cell();
+            map.insert(String::from("id"), &Cell::Int(8));
+            map.insert(String::from("name"), &name);
+            map.insert(String::from("age"), &Cell::Int(39));
+            map.insert(String::from("score"), &Cell::Int(400));
+            map.insert(String::from("registered"), &Cell::Bool(true));
+        }
+        _ => {
+            panic!("dataframe iter index out of bounds.")
+        }
     })
 }
