@@ -6,6 +6,7 @@ use dataframe::dataframe::*;
 use dataframe::expression::*;
 use dataframe::row;
 use dataframe::row::ToRow;
+use dataframe::sort::*;
 
 fn generic_dataframe() -> Dataframe {
     Dataframe::from_rows(
@@ -306,4 +307,12 @@ fn csv_dataframe() {
     assert_eq!(df, expected_df);
 
     df.to_csv("./tests/new_test.csv").unwrap();
+}
+
+#[test]
+fn iterrows() {
+    let df = generic_dataframe();
+    df.iter().for_each(|row| {
+        print!("{:?}", row);
+    })
 }

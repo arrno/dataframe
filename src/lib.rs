@@ -1,9 +1,11 @@
-pub mod cell;
 mod column;
-pub mod dataframe;
 mod dataslice;
-pub mod expression;
 mod format;
 mod join;
-pub mod row;
 mod util;
+mod iterrows;
+pub mod sort;
+pub mod cell;
+pub mod dataframe;
+pub mod expression;
+pub mod row;

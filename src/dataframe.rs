@@ -7,23 +7,15 @@ use crate::cell::*;
 use crate::column::*;
 use crate::dataslice::*;
 use crate::expression::*;
+use crate::iterrows;
+use crate::iterrows::*;
 use crate::row::*;
+use crate::sort::*;
 use crate::util::*;
 use std::cmp::min;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
-
-pub enum SortOrder {
-    Asc,
-    Desc,
-}
-pub fn asc() -> SortOrder {
-    SortOrder::Asc
-}
-pub fn desc() -> SortOrder {
-    SortOrder::Desc
-}
 
 #[derive(Debug, PartialEq)]
 pub struct Dataframe {
@@ -518,5 +510,9 @@ impl Dataframe {
 
     pub fn print(&self) {
         DataSlice::from(self).print();
+    }
+
+    pub fn iter<'a>(&'a self) -> Iterrows<'a> {
+        iterrows::Iterrows::new(self.to_slice())
     }
 }
