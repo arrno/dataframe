@@ -18,6 +18,7 @@ use dataframe::dataframe::*;
 ```
 ## Create
 **Create from rows**
+
 using the `row!` macro
 ```rust
 let df = Dataframe::from_rows(
@@ -157,7 +158,7 @@ let df = df.filter(exp("age", neq(), None::<i64>)).unwrap();
 ```
 **Complex**
 
-Nest as many or/add/exp as needed
+Nest as many and/or/exp as needed
 ```rust
 let df = df
     .filter(or(vec![
