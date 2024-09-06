@@ -45,9 +45,9 @@ impl<'a> DataSlice<'a> {
     pub fn columns(&self) -> &Vec<ColSlice<'a>> {
         &self.columns
     }
-    pub fn slice(&self, start: usize, stop: usize) -> Result<DataSlice, MyErr> {
+    pub fn slice(&self, start: usize, stop: usize) -> Result<DataSlice, Error> {
         if start >= stop || stop > self.length() {
-            return Err(MyErr::new("Invalid slice params".to_string()));
+            return Err(Error::new("Invalid slice params".to_string()));
         }
         Ok(DataSlice {
             title: &self.title,
@@ -58,7 +58,7 @@ impl<'a> DataSlice<'a> {
                 .collect(),
         })
     }
-    pub fn col_slice(&self, cols: HashSet<&str>) -> Result<DataSlice, MyErr> {
+    pub fn col_slice(&self, cols: HashSet<&str>) -> Result<DataSlice, Error> {
         Ok(DataSlice {
             title: &self.title,
             columns: self

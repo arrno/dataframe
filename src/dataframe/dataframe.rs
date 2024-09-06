@@ -1,17 +1,18 @@
 use csv::Writer;
 use serde::Deserialize;
-use std::error::Error;
+use std::error::Error as StdError;
 use std::fs::File;
 
-use crate::cell::*;
+pub use crate::cell::*;
 use crate::column::*;
 use crate::dataslice::*;
-use crate::expression::*;
+pub use crate::expression::*;
 use crate::iterrows;
 use crate::iterrows::*;
-use crate::row::*;
-use crate::sort::*;
-use crate::util::*;
+pub use crate::row;
+pub use crate::row::*;
+pub use crate::sort::*;
+use crate::util::Error;
 use std::cmp::min;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -41,7 +42,7 @@ impl Dataframe {
         &self.columns
     }
 
-    pub fn from_to_rows<T>(labels: Vec<&str>, rows: Vec<T>) -> Result<Self, MyErr>
+    pub fn from_to_rows<T>(labels: Vec<&str>, rows: Vec<T>) -> Result<Self, Error>
     where
         T: ToRow,
     {
@@ -53,7 +54,7 @@ impl Dataframe {
         for row in rows.into_iter() {
             let cells = row.to_row();
             if cells.len() != labels.len() {
-                return Err(MyErr::new("Inconsistent data shape".to_string()));
+                return Err(Error::new("Inconsistent data shape".to_string()));
             } else {
                 cells
                     .into_iter()
@@ -67,7 +68,7 @@ impl Dataframe {
         Ok(df)
     }
 
-    pub fn from_rows(labels: Vec<&str>, rows: Vec<Vec<Cell>>) -> Result<Self, MyErr> {
+    pub fn from_rows(labels: Vec<&str>, rows: Vec<Vec<Cell>>) -> Result<Self, Error> {
         let mut df = Self::new(None);
         if rows.len() == 0 {
             return Ok(df);
@@ -75,7 +76,7 @@ impl Dataframe {
         let mut cols: Vec<Vec<Cell>> = labels.iter().map(|_| vec![]).collect();
         for cells in rows.into_iter() {
             if cells.len() != labels.len() {
-                return Err(MyErr::new("Inconsistent data shape".to_string()));
+                return Err(Error::new("Inconsistent data shape".to_string()));
             } else {
                 cells
                     .into_iter()
@@ -89,7 +90,7 @@ impl Dataframe {
         Ok(df)
     }
 
-    pub fn from_csv<T>(file_path: &str) -> Result<Self, MyErr>
+    pub fn from_csv<T>(file_path: &str) -> Result<Self, Error>
     where
         for<'a> T: ToRow + Deserialize<'a>,
     {
@@ -97,13 +98,13 @@ impl Dataframe {
         let mut labels = vec![];
         let file = match File::open(file_path) {
             Ok(f) => f,
-            Err(e) => return Err(MyErr::new(e.to_string())),
+            Err(e) => return Err(Error::new(e.to_string())),
         };
         let mut reader = csv::Reader::from_reader(file);
         for record in reader.deserialize() {
             let record: T = match record {
                 Ok(r) => r,
-                Err(e) => return Err(MyErr::new(e.to_string())),
+                Err(e) => return Err(Error::new(e.to_string())),
             };
             rows.push(record.to_row());
             if labels.len() == 0 {
@@ -113,7 +114,7 @@ impl Dataframe {
         Self::from_rows(labels.iter().map(|l| l.as_str()).collect(), rows)
     }
 
-    pub fn to_csv(&self, file_path: &str) -> Result<(), Box<dyn Error>> {
+    pub fn to_csv(&self, file_path: &str) -> Result<(), Box<dyn StdError>> {
         let mut wtr = Writer::from_path(file_path)?;
         wtr.write_record(
             self.columns
@@ -174,31 +175,31 @@ impl Dataframe {
         self
     }
 
-    pub fn add_col<T>(&mut self, name: &str, set: Vec<T>) -> Result<(), MyErr>
+    pub fn add_col<T>(&mut self, name: &str, set: Vec<T>) -> Result<(), Error>
     where
         T: ToCell,
     {
         let l = self.length();
         if l != 0 && l != set.len() {
-            return Err(MyErr::new("Invalid col length".to_string()));
+            return Err(Error::new("Invalid col length".to_string()));
         }
         for col in self.columns.iter() {
             if col.name() == name {
-                return Err(MyErr::new("Col names must be unique".to_string()));
+                return Err(Error::new("Col names must be unique".to_string()));
             }
         }
         self.columns.push(Col::new(name.into(), set));
         Ok(())
     }
 
-    pub fn add_cell_col(&mut self, name: String, set: Vec<Cell>) -> Result<(), MyErr> {
+    pub fn add_cell_col(&mut self, name: String, set: Vec<Cell>) -> Result<(), Error> {
         let l = self.length();
         if l != 0 && l != set.len() {
-            return Err(MyErr::new("Invalid col length".to_string()));
+            return Err(Error::new("Invalid col length".to_string()));
         }
         for col in self.columns.iter() {
             if col.name() == name {
-                return Err(MyErr::new("Col names must be unique".to_string()));
+                return Err(Error::new("Col names must be unique".to_string()));
             }
         }
         let zero = set[0].zero();
@@ -206,33 +207,33 @@ impl Dataframe {
         Ok(())
     }
 
-    pub fn add_opt_col<T>(&mut self, name: String, set: Vec<Option<T>>) -> Result<(), MyErr>
+    pub fn add_opt_col<T>(&mut self, name: String, set: Vec<Option<T>>) -> Result<(), Error>
     where
         T: ToCell + Clone + Default,
     {
         let l = self.length();
         if l != 0 && l != set.len() {
-            return Err(MyErr::new("Invalid col length".to_string()));
+            return Err(Error::new("Invalid col length".to_string()));
         }
         for col in self.columns.iter() {
             if col.name() == name {
-                return Err(MyErr::new("Col names must be unique".to_string()));
+                return Err(Error::new("Col names must be unique".to_string()));
             }
         }
         self.columns.push(Col::new(name, set));
         Ok(())
     }
 
-    pub fn add_row<T>(&mut self, set: Vec<T>) -> Result<(), MyErr>
+    pub fn add_row<T>(&mut self, set: Vec<T>) -> Result<(), Error>
     where
         T: ToCell,
     {
         if set.len() != self.columns.len() {
-            return Err(MyErr::new("Invalid col length".to_string()));
+            return Err(Error::new("Invalid col length".to_string()));
         }
         for (i, col) in self.columns.iter().enumerate() {
             if col.values().len() > 0 && col.values()[0].zero() != set[i].ref_to_cell().zero() {
-                return Err(MyErr::new("Invalid col types".to_string()));
+                return Err(Error::new("Invalid col types".to_string()));
             }
         }
         for i in 0..set.len() {
@@ -241,16 +242,16 @@ impl Dataframe {
         Ok(())
     }
 
-    pub fn add_opt_row<T>(&mut self, set: Vec<Option<T>>) -> Result<(), MyErr>
+    pub fn add_opt_row<T>(&mut self, set: Vec<Option<T>>) -> Result<(), Error>
     where
         T: ToCell + Clone + Default,
     {
         if set.len() != self.columns.len() {
-            return Err(MyErr::new("Invalid col length".to_string()));
+            return Err(Error::new("Invalid col length".to_string()));
         }
         for (i, col) in self.columns.iter().enumerate() {
             if col.values().len() > 0 && col.values()[0].zero() != set[i].ref_to_cell().zero() {
-                return Err(MyErr::new("Invalid col types".to_string()));
+                return Err(Error::new("Invalid col types".to_string()));
             }
         }
         for i in 0..set.len() {
@@ -259,7 +260,7 @@ impl Dataframe {
         Ok(())
     }
 
-    pub fn filter(&mut self, exp: Exp) -> Result<Self, MyErr> {
+    pub fn filter(&mut self, exp: Exp) -> Result<Self, Error> {
         let col_map = self.col_map();
         let filter_set = (0..self.length())
             .map(|i| {
@@ -294,9 +295,9 @@ impl Dataframe {
         self.slice(0, self.length()).unwrap()
     }
 
-    pub fn slice(&self, start: usize, stop: usize) -> Result<DataSlice, MyErr> {
+    pub fn slice(&self, start: usize, stop: usize) -> Result<DataSlice, Error> {
         if start > stop || stop > self.length() {
-            return Err(MyErr::new("Invalid slice params".to_string()));
+            return Err(Error::new("Invalid slice params".to_string()));
         }
         Ok(DataSlice::new(
             &self.title,
@@ -307,7 +308,7 @@ impl Dataframe {
         ))
     }
 
-    pub fn col_slice(&self, cols: HashSet<&str>) -> Result<DataSlice, MyErr> {
+    pub fn col_slice(&self, cols: HashSet<&str>) -> Result<DataSlice, Error> {
         Ok(DataSlice::new(
             &self.title,
             self.columns
@@ -348,12 +349,12 @@ impl Dataframe {
             .len()
     }
 
-    pub fn join(&self, with: &Dataframe, on: (&str, &str)) -> Result<Self, MyErr> {
+    pub fn join(&self, with: &Dataframe, on: (&str, &str)) -> Result<Self, Error> {
         let self_index = self.column(on.0)?;
         let with_index = with.column(on.1)?;
         let match_count = self.match_count(&with);
         if (on.0 == on.1 && match_count != 1) || (on.0 != on.1 && match_count != 0) {
-            return Err(MyErr::new(
+            return Err(Error::new(
                 "Join dataframe columns are not unique".to_string(),
             ));
         }
@@ -412,7 +413,7 @@ impl Dataframe {
         Ok(new_df)
     }
 
-    pub fn sort(&mut self, by: &str, order: SortOrder) -> Result<(), MyErr> {
+    pub fn sort(&mut self, by: &str, order: SortOrder) -> Result<(), Error> {
         let self_index = self.column_mut(&by)?;
         let mut sort_instructions = Vec::new();
         self_index.values_mut().sort_by(|cur, prev| match order {
@@ -448,17 +449,17 @@ impl Dataframe {
         Ok(())
     }
 
-    pub fn column(&self, name: &str) -> Result<&Col, MyErr> {
+    pub fn column(&self, name: &str) -> Result<&Col, Error> {
         match self.columns.iter().find(|col| col.name() == name) {
             Some(col) => Ok(col),
-            None => Err(MyErr::new("join column not found on self.".to_string())),
+            None => Err(Error::new("join column not found on self.".to_string())),
         }
     }
 
-    pub fn column_mut(&mut self, name: &str) -> Result<&mut Col, MyErr> {
+    pub fn column_mut(&mut self, name: &str) -> Result<&mut Col, Error> {
         match self.columns.iter_mut().find(|col| col.name() == name) {
             Some(col) => Ok(col),
-            None => Err(MyErr::new("join column not found on self.".to_string())),
+            None => Err(Error::new("join column not found on self.".to_string())),
         }
     }
 
@@ -480,9 +481,9 @@ impl Dataframe {
         None
     }
 
-    pub fn concat(&mut self, with: Dataframe) -> Result<(), MyErr> {
+    pub fn concat(&mut self, with: Dataframe) -> Result<(), Error> {
         if !self.compare(&with) {
-            return Err(MyErr::new(
+            return Err(Error::new(
                 "Concat against mismatched dataframes".to_string(),
             ));
         }
@@ -502,7 +503,7 @@ impl Dataframe {
         self.columns[0].values().len()
     }
 
-    pub fn head(&self) -> Result<(), MyErr> {
+    pub fn head(&self) -> Result<(), Error> {
         let head_df = self.slice(0, min(5, self.length()))?;
         head_df.print();
         Ok(())

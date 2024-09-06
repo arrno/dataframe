@@ -1,11 +1,16 @@
 [package]
 name = "dataframe"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
+authors = ["Aaron <aaronhough@trapzd.com>"]
+
+[lib]
+name = "dataframe"
+path = "src/dataframe/lib.rs"
 
 [dependencies]
 chrono = "0.4.38"
 csv = "1.3.0"
 regex = "1.10.6"
-serde = {version = "1.0.209", features = ["derive"]}
+serde = { version = "1.0.209", features = ["derive"] }
 dataframe-macros = { path = "./dataframe-macros" }

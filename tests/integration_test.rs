@@ -1,14 +1,7 @@
-use std::collections::HashMap;
-
+use dataframe::dataframe::*;
 use dataframe_macros::ToRow;
 use serde::Deserialize;
-
-use dataframe::cell::*;
-use dataframe::dataframe::*;
-use dataframe::expression::*;
-use dataframe::row;
-use dataframe::row::ToRow;
-use dataframe::sort::*;
+use std::collections::HashMap;
 
 fn generic_dataframe() -> Dataframe {
     Dataframe::from_rows(

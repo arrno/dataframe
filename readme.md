@@ -11,6 +11,11 @@
 +-----------+------+-----------+
 ```
 
+## Import
+```rust
+use dataframe::dataframe::*;
+// use dataframe_macros::ToRow;
+```
 ## Create
 **Create from rows**
 using the `row!` macro
@@ -199,3 +204,5 @@ let unames = df
 ```rust
 df.to_csv("./tests/test.csv").unwrap();
 ```
+## Examples
+For more examples, see `./tests/integration_test.rs`

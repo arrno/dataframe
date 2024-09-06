@@ -3,15 +3,15 @@ use core::fmt;
 pub const MAX_CELL_DISPLAY: usize = 20;
 
 #[derive(Debug, Clone)]
-pub struct MyErr {
+pub struct Error {
     reason: String,
 }
-impl MyErr {
+impl Error {
     pub fn new(reason: String) -> Self {
-        MyErr { reason }
+        Error { reason }
     }
 }
-impl fmt::Display for MyErr {
+impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Oh No! {}", self.reason)
     }
