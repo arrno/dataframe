@@ -13,6 +13,7 @@ pub use crate::row;
 pub use crate::row::*;
 pub use crate::sort::*;
 use crate::util::Error;
+pub use dataframe_macros::ToRow;
 use std::cmp::min;
 use std::cmp::Ordering;
 use std::collections::HashMap;

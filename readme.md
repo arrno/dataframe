@@ -14,7 +14,6 @@
 ## Import
 ```rust
 use dataframe::dataframe::*;
-// use dataframe_macros::ToRow;
 ```
 ## Create
 **Create from rows**
