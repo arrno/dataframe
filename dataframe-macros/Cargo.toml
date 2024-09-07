@@ -1,12 +1,18 @@
 [package]
 name = "dataframe-macros"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
 
 [lib]
 name = "dataframe_macros"
 path = "src/lib.rs"
 proc-macro = true
+version = "0.0.1"
+repository = "https://github.com/arrno/dataframe"
+homepage = "https://rebug.dev"
+readme = "https://github.com/arrno/dataframe/blob/main/readme.md"
+authors = ["Aaron <aaronhough@trapzd.com>"]
+license = "MIT License"
 
 [dependencies]
 darling = "0.20.10"
