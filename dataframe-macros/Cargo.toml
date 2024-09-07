@@ -2,6 +2,12 @@
 name = "dataframe-macros"
 version = "0.0.1"
 edition = "2021"
+repository = "https://github.com/arrno/dataframe"
+homepage = "https://rebug.dev"
+readme = "https://github.com/arrno/dataframe/blob/main/readme.md"
+authors = ["Aaron <aaronhough@trapzd.com>"]
+license = "MIT License"
+description = "proc macros to be used with dataframe package."
 
 [lib]
 name = "dataframe_macros"
