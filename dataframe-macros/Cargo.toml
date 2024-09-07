@@ -4,9 +4,9 @@ version = "0.0.1"
 edition = "2021"
 repository = "https://github.com/arrno/dataframe"
 homepage = "https://rebug.dev"
-readme = "https://github.com/arrno/dataframe/blob/main/readme.md"
+readme = "../readme.md"
 authors = ["Aaron <aaronhough@trapzd.com>"]
-license = "MIT License"
+license = "MIT"
 description = "proc macros to be used with dataframe package."
 
 [lib]
@@ -18,7 +18,7 @@ repository = "https://github.com/arrno/dataframe"
 homepage = "https://rebug.dev"
 readme = "https://github.com/arrno/dataframe/blob/main/readme.md"
 authors = ["Aaron <aaronhough@trapzd.com>"]
-license = "MIT License"
+license = "MIT"
 
 [dependencies]
 darling = "0.20.10"

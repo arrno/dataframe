@@ -1,27 +1,27 @@
 [package]
-name = "dataframe"
+name = "rowboat"
 version = "0.0.1"
 edition = "2021"
 authors = ["Aaron <aaronhough@trapzd.com>"]
-description = "A package for working with row/column/cell structured data."
+description = "A package for working with row/column/cell structured data AKA dataframe."
 repository = "https://github.com/arrno/dataframe"
 homepage = "https://rebug.dev"
-readme = "https://github.com/arrno/dataframe/blob/main/readme.md"
-keywords = ["table", "cell", "column", "row", "dataframe", "concat", "join"]
-license = "MIT License"
+readme = "./readme.md"
+keywords = ["table", "cell", "column", "row", "dataframe"]
+license = "MIT"
 
 [lib]
-name = "dataframe"
+name = "rowboat"
 path = "src/dataframe/lib.rs"
 version = "0.0.1"
 edition = "2021"
-description = "A package for working with row/column/cell structured data."
+description = "A package for working with row/column/cell structured data AKA dataframe.."
 repository = "https://github.com/arrno/dataframe"
 homepage = "https://rebug.dev"
-readme = "https://github.com/arrno/dataframe/blob/main/readme.md"
+readme = "./readme.md"
 authors = ["Aaron <aaronhough@trapzd.com>"]
-keywords = ["table", "cell", "column", "row", "dataframe", "concat", "join"]
-license = "MIT License"
+keywords = ["table", "cell", "column", "row", "dataframe"]
+license = "MIT"
 
 
 [dependencies]

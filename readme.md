@@ -13,7 +13,7 @@
 
 ## Import
 ```rust
-use dataframe::dataframe::*;
+use rowboat::dataframe::*;
 ```
 ## Create
 **Create from rows**

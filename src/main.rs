@@ -1,4 +1,4 @@
-use dataframe::dataframe::*;
+use rowboat::dataframe::*;
 
 fn main() {
     let df = Dataframe::from_rows(
