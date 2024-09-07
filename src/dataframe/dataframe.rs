@@ -43,7 +43,7 @@ impl Dataframe {
         &self.columns
     }
 
-    pub fn from_to_rows<T>(labels: Vec<&str>, rows: Vec<T>) -> Result<Self, Error>
+    pub fn from_structs<T>(rows: Vec<T>) -> Result<Self, Error>
     where
         T: ToRow,
     {
@@ -51,6 +51,7 @@ impl Dataframe {
         if rows.len() == 0 {
             return Ok(df);
         }
+        let labels = rows[0].labels();
         let mut cols: Vec<Vec<Cell>> = labels.iter().map(|_| vec![]).collect();
         for row in rows.into_iter() {
             let cells = row.to_row();

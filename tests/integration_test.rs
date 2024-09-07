@@ -287,6 +287,38 @@ struct MyRow {
 }
 
 #[test]
+fn from_structs() {
+    let df = Dataframe::from_structs(vec![
+        MyRow {
+            name: "Jake".to_string(),
+            age: 23,
+            val: true,
+        },
+        MyRow {
+            name: "Sally".to_string(),
+            age: 44,
+            val: false,
+        },
+        MyRow {
+            name: "Jasper".to_string(),
+            age: 61,
+            val: true,
+        },
+    ])
+    .unwrap();
+    let expected_df = Dataframe::from_rows(
+        vec!["name", "age", "val"],
+        vec![
+            row!("Jake", 23, true),
+            row!("Sally", 44, false),
+            row!("Jasper", 61, true),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
+}
+
+#[test]
 fn csv_dataframe() {
     let df = Dataframe::from_csv::<MyRow>("./tests/test.csv").unwrap();
     let expected_df = Dataframe::from_rows(

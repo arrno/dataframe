@@ -54,6 +54,37 @@ impl ToRow for MyRow {
     }
 }
 ```
+
+**Create from structs**
+
+Create from a `Vec<T>` where `T` implements `Deserialize + ToRow`
+```rust
+#[derive(Deserialize, ToRow)]
+struct MyRow {
+    name: String,
+    score: i64,
+    val: bool,
+}
+
+let df = Dataframe::from_structs(vec![
+    MyRow {
+        name: "Jake".to_string(),
+        age: 23,
+        val: true,
+    },
+    MyRow {
+        name: "Sally".to_string(),
+        age: 44,
+        val: false,
+    },
+    MyRow {
+        name: "Jasper".to_string(),
+        age: 61,
+        val: true,
+    },
+])
+.unwrap();
+```
 **With null values**
 ```rust
 let df = Dataframe::from_rows(
