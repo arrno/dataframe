@@ -209,56 +209,18 @@ impl Dataframe {
         Ok(())
     }
 
-    pub fn add_opt_col<T>(&mut self, name: String, set: Vec<Option<T>>) -> Result<(), Error>
-    where
-        T: ToCell + Clone + Default,
-    {
-        let l = self.length();
-        if l != 0 && l != set.len() {
-            return Err(Error::new("Invalid col length".to_string()));
-        }
-        for col in self.columns.iter() {
-            if col.name() == name {
-                return Err(Error::new("Col names must be unique".to_string()));
-            }
-        }
-        self.columns.push(Col::new(name, set));
-        Ok(())
-    }
-
-    pub fn add_row<T>(&mut self, set: Vec<T>) -> Result<(), Error>
-    where
-        T: ToCell,
-    {
-        if set.len() != self.columns.len() {
+    pub fn add_row(&mut self, row: Vec<Cell>) -> Result<(), Error> {
+        if row.len() != self.columns.len() {
             return Err(Error::new("Invalid col length".to_string()));
         }
         for (i, col) in self.columns.iter().enumerate() {
-            if col.values().len() > 0 && col.values()[0].zero() != set[i].ref_to_cell().zero() {
+            if col.values().len() > 0 && col.values()[0].zero() != row[i].zero() {
                 return Err(Error::new("Invalid col types".to_string()));
             }
         }
-        for i in 0..set.len() {
-            self.columns[i].values_mut().push(set[i].ref_to_cell());
-        }
-        Ok(())
-    }
-
-    pub fn add_opt_row<T>(&mut self, set: Vec<Option<T>>) -> Result<(), Error>
-    where
-        T: ToCell + Clone + Default,
-    {
-        if set.len() != self.columns.len() {
-            return Err(Error::new("Invalid col length".to_string()));
-        }
-        for (i, col) in self.columns.iter().enumerate() {
-            if col.values().len() > 0 && col.values()[0].zero() != set[i].ref_to_cell().zero() {
-                return Err(Error::new("Invalid col types".to_string()));
-            }
-        }
-        for i in 0..set.len() {
-            self.columns[i].values_mut().push(set[i].ref_to_cell());
-        }
+        row.into_iter().enumerate().for_each(|(i, cell)| {
+            self.columns[i].values_mut().push(cell);
+        });
         Ok(())
     }
 

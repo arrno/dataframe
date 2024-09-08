@@ -1,6 +1,8 @@
 use crate::column::*;
 use crate::dataframe::*;
 use crate::format::*;
+use crate::iterrows;
+use crate::iterrows::*;
 use crate::util::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -86,6 +88,10 @@ impl<'a> DataSlice<'a> {
             })
             .collect::<HashMap<&String, &()>>()
             .len()
+    }
+
+    pub fn iter(self) -> Iterrows<'a> {
+        iterrows::Iterrows::new(self)
     }
 }
 

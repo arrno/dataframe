@@ -120,6 +120,19 @@ fn apply_dataframe() {
     )
     .unwrap();
     assert_eq!(df, expected_df);
+    if let Cell::Int(val) = df.cell_mut((2, "age")).unwrap() {
+        *val += 2;
+    }
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![
+            row!(12, "Sasha", 33, 1600, false),
+            row!(14, "Jane", 24, 700, true),
+            row!(16, "Jerry", 41, 400, true),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
 }
 
 #[test]
@@ -200,6 +213,130 @@ fn concat_dataframe() {
     )
     .unwrap();
     assert_eq!(df, expected_df);
+}
+
+#[test]
+fn extend_dataframe() {
+    let mut df = generic_dataframe();
+    df.add_col(
+        "age is even",
+        df.column("age")
+            .unwrap()
+            .values()
+            .iter()
+            .map(|cell| match cell {
+                Cell::Int(score) => Some(score % 2 == 0),
+                _ => None::<bool>,
+            })
+            .collect(),
+    )
+    .unwrap();
+
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered", "age is even"],
+        vec![
+            row!(4, "Sally", 23, 700, true, Some(false)),
+            row!(1, "Jasper", 41, 900, false, Some(false)),
+            row!(5, "Jake", 33, 1200, true, Some(false)),
+            row!(2, "Susie", 27, 200, true, Some(false)),
+            row!(3, "Spruce", 24, 800, false, Some(true)),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
+
+    df.add_col(
+        "id and age odd",
+        df.col_slice(["id", "age"].into())
+            .unwrap()
+            .iter()
+            .map(|row| {
+                let id_odd = match row.get("id").unwrap() {
+                    Cell::Int(v) => v % 2 != 0,
+                    _ => false,
+                };
+                let score_odd = match row.get("age").unwrap() {
+                    Cell::Int(v) => v % 2 != 0,
+                    _ => false,
+                };
+                id_odd && score_odd
+            })
+            .collect(),
+    )
+    .unwrap();
+
+    let expected_df = Dataframe::from_rows(
+        vec![
+            "id",
+            "name",
+            "age",
+            "score",
+            "registered",
+            "age is even",
+            "id and age odd",
+        ],
+        vec![
+            row!(4, "Sally", 23, 700, true, Some(false), false),
+            row!(1, "Jasper", 41, 900, false, Some(false), true),
+            row!(5, "Jake", 33, 1200, true, Some(false), true),
+            row!(2, "Susie", 27, 200, true, Some(false), false),
+            row!(3, "Spruce", 24, 800, false, Some(true), false),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
+
+    df.add_row(row![4, "Sparce", 26, 850, true, true, false])
+        .unwrap();
+    assert_eq!(
+        df,
+        Dataframe::from_rows(
+            vec![
+                "id",
+                "name",
+                "age",
+                "score",
+                "registered",
+                "age is even",
+                "id and age odd"
+            ],
+            vec![
+                row!(4, "Sally", 23, 700, true, false, false),
+                row!(1, "Jasper", 41, 900, false, false, true),
+                row!(5, "Jake", 33, 1200, true, false, true),
+                row!(2, "Susie", 27, 200, true, false, false),
+                row!(3, "Spruce", 24, 800, false, true, false),
+                row![4, "Sparce", 26, 850, true, true, false],
+            ],
+        )
+        .unwrap()
+    );
+    df.add_row(row![4, "Sparce", 26, 850, true, None::<bool>, false])
+        .unwrap();
+    assert_eq!(
+        df,
+        Dataframe::from_rows(
+            vec![
+                "id",
+                "name",
+                "age",
+                "score",
+                "registered",
+                "age is even",
+                "id and age odd"
+            ],
+            vec![
+                row!(4, "Sally", 23, 700, true, false, false),
+                row!(1, "Jasper", 41, 900, false, false, true),
+                row!(5, "Jake", 33, 1200, true, false, true),
+                row!(2, "Susie", 27, 200, true, false, false),
+                row!(3, "Spruce", 24, 800, false, true, false),
+                row![4, "Sparce", 26, 850, true, true, false],
+                row![4, "Sparce", 26, 850, true, None::<bool>, false],
+            ],
+        )
+        .unwrap()
+    );
 }
 
 #[test]
@@ -371,5 +508,5 @@ fn iterrows() {
         _ => {
             panic!("dataframe iter index out of bounds.")
         }
-    })
+    });
 }

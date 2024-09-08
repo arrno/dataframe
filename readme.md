@@ -129,7 +129,7 @@ df.add_col("new column", vec![2, 4, 6]).unwrap();
 ```
 **Add row**
 ```rust
-df.add_row(vec!["Jane", 44, true]).unwrap();
+df.add_row(row!["Jane", 44, true]).unwrap();
 ```
 **Concat**
 ```rust
@@ -163,6 +163,48 @@ let result_df = df
         ("id", "user_id"),
     )
     .unwrap();
+```
+
+**More on columns**
+
+Copy/update an existing column into a new column.
+```rust
+df.add_col(
+    "age is even",
+    df.column("age")
+        .unwrap()
+        .values()
+        .iter()
+        .map(|cell| match cell {
+            Cell::Int(score) => Some(score % 2 == 0),
+            _ => None::<bool>,
+        })
+        .collect(),
+)
+.unwrap();
+```
+
+Create a column derived from multiple source column values.
+```rust
+df.add_col(
+    "id and age odd",
+    df.col_slice(["id", "age"].into())
+        .unwrap()
+        .iter()
+        .map(|row| {
+            let id_odd = match row.get("id").unwrap() {
+                Cell::Int(v) => v % 2 != 0,
+                _ => false,
+            };
+            let score_odd = match row.get("age").unwrap() {
+                Cell::Int(v) => v % 2 != 0,
+                _ => false,
+            };
+            id_odd && score_odd
+        })
+        .collect(),
+)
+.unwrap();
 ```
 ## Slice
 **By index**
@@ -208,12 +250,19 @@ Supported expression operations:
 - `regx()` matches regex
 
 ## Mutate
+By column
 ```rust
 df.col_mut("id").unwrap().iter_mut().for_each(|cell| {
     if let Cell::Int(val) = cell {
         *val *= 2
     }
 });
+```
+By cell
+```rust
+if let Cell::Int(val) = df.cell_mut((2, "age")).unwrap() {
+    *val += 2;
+}
 ```
 ## Sort
 ```rust
