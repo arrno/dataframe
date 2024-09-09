@@ -1,4 +1,5 @@
-# Dataframe in rust 🦀
+# Rowboat 🛶 
+## Dataframe in rust 🦀
 ```
 +-----------+------+-----------+
 | strangs   | nums | null nums |
