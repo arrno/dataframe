@@ -1,0 +1,8 @@
+shape/type errors
+---
+iter_mut
+into_iter
+---
+abbreviated display, cell/cols
+---
+option/null filter/compare/equal

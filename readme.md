@@ -110,17 +110,31 @@ let df = Dataframe::from_rows(
 .unwrap();
 ```
 **Supported types**
-- String
-- Int
-- Uint
-- Float
-- Bool
-- Option/Null
-- chrono::NaiveDateTime
+
+- `Int(i64)`
+- `Uint(u64)`
+- `Str(String)`
+- `Bool(bool)`
+- `Float(f64)`
+- `DateTime(chrono::NaiveDateTime)`
+- `Null(Box<Cell>)`
 
 ## Display
+All
 ```rust
 df.print();
+```
+Head
+```rust
+df.head(5);
+```
+Tail
+```rust
+df.tail(5);
+```
+Info
+```rust
+df.info();
 ```
 ## Extend
 **Add column**

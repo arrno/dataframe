@@ -14,8 +14,8 @@ pub use crate::row::*;
 pub use crate::sort::*;
 use crate::util::Error;
 pub use dataframe_macros::ToRow;
-use std::cmp::min;
 use std::cmp::Ordering;
+use std::cmp::{max, min};
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -467,10 +467,37 @@ impl Dataframe {
         self.columns[0].values().len()
     }
 
-    pub fn head(&self) -> Result<(), Error> {
-        let head_df = self.slice(0, min(5, self.length()))?;
-        head_df.print();
-        Ok(())
+    pub fn head(&self, count: usize) {
+        match self.slice(0, min(count, self.length())) {
+            Ok(head_df) => head_df.print(),
+            Err(_) => println!("[...]"),
+        };
+    }
+
+    pub fn tail(&self, count: usize) {
+        let length = self.length();
+        let start = max(0, length as isize - count as isize);
+        match self.slice(start as usize, length) {
+            Ok(tail_df) => tail_df.print(),
+            Err(_) => println!("[...]"),
+        };
+    }
+
+    pub fn col_names(&self) -> Vec<&str> {
+        self.columns().iter().map(|col| col.name()).collect()
+    }
+
+    pub fn col_types(&self) -> Vec<String> {
+        self.columns
+            .iter()
+            .map(|c| format!("{} <{}>", c.name(), c.typed().type_string()))
+            .collect()
+    }
+
+    pub fn info(&self) {
+        let shape = format!("{}_col x {}_row", self.columns().len(), self.length());
+        let columns = self.col_types().join(", ");
+        println!("DF Info\nShape: {shape}\nColumns: {columns}");
     }
 
     pub fn print(&self) {

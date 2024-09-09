@@ -235,11 +235,11 @@ fn extend_dataframe() {
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered", "age is even"],
         vec![
-            row!(4, "Sally", 23, 700, true, Some(false)),
-            row!(1, "Jasper", 41, 900, false, Some(false)),
-            row!(5, "Jake", 33, 1200, true, Some(false)),
-            row!(2, "Susie", 27, 200, true, Some(false)),
-            row!(3, "Spruce", 24, 800, false, Some(true)),
+            row!(4, "Sally", 23, 700, true, false),
+            row!(1, "Jasper", 41, 900, false, false),
+            row!(5, "Jake", 33, 1200, true, false),
+            row!(2, "Susie", 27, 200, true, false),
+            row!(3, "Spruce", 24, 800, false, true),
         ],
     )
     .unwrap();
@@ -276,11 +276,11 @@ fn extend_dataframe() {
             "id and age odd",
         ],
         vec![
-            row!(4, "Sally", 23, 700, true, Some(false), false),
-            row!(1, "Jasper", 41, 900, false, Some(false), true),
-            row!(5, "Jake", 33, 1200, true, Some(false), true),
-            row!(2, "Susie", 27, 200, true, Some(false), false),
-            row!(3, "Spruce", 24, 800, false, Some(true), false),
+            row!(4, "Sally", 23, 700, true, false, false),
+            row!(1, "Jasper", 41, 900, false, false, true),
+            row!(5, "Jake", 33, 1200, true, false, true),
+            row!(2, "Susie", 27, 200, true, false, false),
+            row!(3, "Spruce", 24, 800, false, true, false),
         ],
     )
     .unwrap();
