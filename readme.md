@@ -58,9 +58,9 @@ impl ToRow for MyRow {
 
 **Create from structs**
 
-Create from a `Vec<T>` where `T` implements `Deserialize + ToRow`
+Create from a `Vec<T>` where `T` implements `ToRow`
 ```rust
-#[derive(Deserialize, ToRow)]
+#[derive(ToRow)]
 struct MyRow {
     name: String,
     score: i64,
