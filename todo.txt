@@ -1,5 +1,3 @@
 more errs checking
 ---
-iter_mut
----
 abbreviated display, cell/cols

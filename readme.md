@@ -294,6 +294,7 @@ let unames = df
     })
     .collect::<Vec<&str>>();
 ```
+A consuming `df.into_iter()` is also available.
 ## Store
 **To csv**
 ```rust

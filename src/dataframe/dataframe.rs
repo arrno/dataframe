@@ -42,6 +42,9 @@ impl Dataframe {
     pub fn columns(&self) -> &Vec<Col> {
         &self.columns
     }
+    pub fn columns_mut(&mut self) -> &mut Vec<Col> {
+        &mut self.columns
+    }
 
     pub fn from_structs<T>(rows: Vec<T>) -> Result<Self, Error>
     where
@@ -460,7 +463,7 @@ impl Dataframe {
         Ok(())
     }
 
-    fn length(&self) -> usize {
+    pub fn length(&self) -> usize {
         if self.columns.len() == 0 {
             return 0;
         }
