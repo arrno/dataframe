@@ -103,3 +103,30 @@ impl<'a> From<&'a Dataframe> for DataSlice<'a> {
         }
     }
 }
+
+#[derive(Debug, PartialEq)]
+pub struct DataSliceMut<'a> {
+    title: &'a str,
+    columns: Vec<ColSliceMut<'a>>,
+    length: usize,
+}
+
+impl<'a> DataSliceMut<'a> {
+    pub fn new(title: &'a str, columns: Vec<ColSliceMut<'a>>) -> Self {
+        let length = match columns.get(0) {
+            Some(col) => col.values().len(),
+            _ => 0,
+        };
+        Self {
+            title,
+            columns,
+            length,
+        }
+    }
+    pub fn length(&self) -> usize {
+        self.length
+    }
+    pub fn columns(&self) -> &Vec<ColSliceMut<'a>> {
+        &self.columns
+    }
+}

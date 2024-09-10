@@ -1,6 +1,5 @@
-shape/type errors
+more errs checking
 ---
 iter_mut
-into_iter
 ---
 abbreviated display, cell/cols

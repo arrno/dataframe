@@ -211,7 +211,7 @@ impl Dataframe {
 
     pub fn add_row(&mut self, row: Vec<Cell>) -> Result<(), Error> {
         if row.len() != self.columns.len() {
-            return Err(Error::new("Invalid col length".to_string()));
+            return Err(Error::new("Invalid row length".to_string()));
         }
         for (i, col) in self.columns.iter().enumerate() {
             if col.values().len() > 0 && col.values()[0].zero() != row[i].zero() {
@@ -416,14 +416,14 @@ impl Dataframe {
     pub fn column(&self, name: &str) -> Result<&Col, Error> {
         match self.columns.iter().find(|col| col.name() == name) {
             Some(col) => Ok(col),
-            None => Err(Error::new("join column not found on self.".to_string())),
+            None => Err(Error::new("column not found.".to_string())),
         }
     }
 
     pub fn column_mut(&mut self, name: &str) -> Result<&mut Col, Error> {
         match self.columns.iter_mut().find(|col| col.name() == name) {
             Some(col) => Ok(col),
-            None => Err(Error::new("join column not found on self.".to_string())),
+            None => Err(Error::new("column not found.".to_string())),
         }
     }
 

@@ -510,3 +510,47 @@ fn iterrows() {
         }
     });
 }
+
+#[test]
+fn errors() {
+    // shape
+    let mut df = generic_dataframe();
+    let result = df.add_col("new", vec![1, 2]);
+    match result {
+        Ok(_) => panic!("Shape err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Invalid col length".to_string()),
+    }
+    let result = df.add_col("id", vec![1, 2, 3, 4, 5]);
+    match result {
+        Ok(_) => panic!("Unique col err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Col names must be unique".to_string()),
+    }
+    let result = df.add_row(row![1, "Sally"]);
+    match result {
+        Ok(_) => panic!("Shape err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Invalid row length".to_string()),
+    }
+    match Dataframe::from_rows(
+        vec!["name", "age", "val"],
+        vec![row!("Jake", 23, true), row!("Sally", 44)],
+    ) {
+        Ok(_) => panic!("Shape err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Inconsistent data shape".to_string()),
+    }
+    // TODO
+    // concat shape / type
+    // join col unique
+    // csv types
+    match df.column("unknown") {
+        Ok(_) => panic!("Missing col err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "column not found.".to_string()),
+    }
+    match df.column_mut("unknown") {
+        Ok(_) => panic!("Missing col err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "column not found.".to_string()),
+    }
+    match df.add_row(row!(4, "Sally", 23, 700, "true")) {
+        Ok(_) => panic!("Type err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Invalid col types".to_string()),
+    }
+}

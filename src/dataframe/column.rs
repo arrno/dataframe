@@ -95,3 +95,19 @@ impl<'a> From<&'a Col> for ColSlice<'a> {
         }
     }
 }
+
+#[derive(Debug, PartialEq)]
+pub struct ColSliceMut<'a> {
+    name: &'a str,
+    values: &'a [&'a mut Cell],
+    typed: &'a Cell,
+}
+
+impl<'a> ColSliceMut<'a> {
+    pub fn values(&'a self) -> &'a [&'a mut Cell] {
+        self.values
+    }
+    pub fn name(&self) -> &str {
+        self.name
+    }
+}
