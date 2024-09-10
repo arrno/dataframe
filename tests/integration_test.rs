@@ -569,10 +569,21 @@ fn errors() {
         Ok(_) => panic!("Shape err not detected"),
         Err(err) => assert_eq!(err.to_string(), "Inconsistent data shape".to_string()),
     }
-    // TODO
-    // concat shape / type
-    // join col unique
-    // csv types
+    let mut df = generic_dataframe();
+    match df.concat(alt_dataframe()) {
+        Ok(_) => panic!("Concat shape err not detected"),
+        Err(err) => assert_eq!(
+            err.to_string(),
+            "Concat against mismatched dataframes".to_string()
+        ),
+    }
+    match df.join(&generic_dataframe(), ("id", "id")) {
+        Ok(_) => panic!("Join unique err not detected"),
+        Err(err) => assert_eq!(
+            err.to_string(),
+            "Join dataframe columns are not unique".to_string()
+        ),
+    }
     match df.column("unknown") {
         Ok(_) => panic!("Missing col err not detected"),
         Err(err) => assert_eq!(err.to_string(), "column not found.".to_string()),

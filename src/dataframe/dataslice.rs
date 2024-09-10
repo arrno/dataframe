@@ -44,6 +44,9 @@ impl<'a> DataSlice<'a> {
         }
         self.columns[0].values().len()
     }
+    pub fn col_names(&self) -> Vec<&str> {
+        self.columns().iter().map(|col| col.name()).collect()
+    }
     pub fn columns(&self) -> &Vec<ColSlice<'a>> {
         &self.columns
     }

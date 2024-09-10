@@ -1,6 +1,7 @@
 use crate::dataslice::*;
 use crate::util::*;
 use std::cmp::{max, min};
+use std::collections::HashSet;
 
 // pub trait Formatter {
 //     fn print(&self);
@@ -43,15 +44,27 @@ impl TableFormatter {
             .join("")
     }
 
-    fn do_print(&self, df: &DataSlice, lengths: &Vec<usize>) {
+    fn do_print(&self, df: &DataSlice, lengths: &Vec<usize>, abbreviated: bool) {
         let sep = self.sep(&lengths);
-        println!("{sep}+");
+        if abbreviated {
+            println!("{sep}+---");
+        } else {
+            println!("{sep}+");
+        }
         df.columns()
             .iter()
             .enumerate()
             .for_each(|(i, col)| print!("| {} ", pad_string(col.name(), lengths[i], false)));
-        print!("|\n");
-        println!("{sep}+");
+        if abbreviated {
+            print!("| ..\n");
+        } else {
+            print!("|\n");
+        }
+        if abbreviated {
+            println!("{sep}+---");
+        } else {
+            println!("{sep}+");
+        }
         for row in 0..df.length() {
             for col in 0..lengths.len() {
                 print!(
@@ -63,13 +76,37 @@ impl TableFormatter {
                     )
                 );
             }
-            print!("|\n")
+            if abbreviated {
+                print!("| ..\n");
+            } else {
+                print!("|\n");
+            }
         }
-        println!("{sep}+");
+        if abbreviated {
+            println!("{sep}+---");
+        } else {
+            println!("{sep}+");
+        }
     }
 
     pub fn print(&self, df: &DataSlice) {
-        let lengths = self.lengths(df);
-        self.do_print(df, &lengths);
+        match df.columns().len() {
+            0..=MAX_COL_DISPLAY => {
+                let lengths = self.lengths(df);
+                self.do_print(df, &lengths, false);
+            }
+            _ => {
+                let abbr_df = &df
+                    .col_slice(
+                        df.col_names()[0..8]
+                            .iter()
+                            .map(|st| *st)
+                            .collect::<HashSet<&str>>(),
+                    )
+                    .unwrap();
+                let lengths = self.lengths(abbr_df);
+                self.do_print(abbr_df, &lengths, true);
+            }
+        }
     }
 }
