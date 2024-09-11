@@ -238,6 +238,21 @@ df.col_slice(["name", "age"].into())
 // (row_index, col_name)
 let cell = df.cell(1, "score").unwrap();
 ```
+
+## Reshape
+**Drop columns**
+
+Drop specified columns.
+```rust
+df.drop_cols(["name", "registered"].into());
+```
+**Retain columns**
+
+Drop all columns other than those specified.
+```rust
+df.retain_cols(["name", "registered"].into());
+```
+
 ## Filter
 **Simple**
 ```rust
@@ -299,19 +314,6 @@ A consuming `df.into_iter()` is also available.
 **To csv**
 ```rust
 df.to_csv("./tests/test.csv").unwrap();
-```
-## Misc
-**Drop columns**
-
-Drop specified columns.
-```rust
-df.drop_cols(["name", "registered"].into());
-```
-**Retain columns**
-
-Drop all columns other than those specified.
-```rust
-df.retain_cols(["name", "registered"].into());
 ```
 ## Examples
 For more examples, see `./tests/integration_test.rs`
