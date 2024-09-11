@@ -597,3 +597,36 @@ fn errors() {
         Err(err) => assert_eq!(err.to_string(), "Invalid col types".to_string()),
     }
 }
+
+#[test]
+fn drop() {
+    let mut df = generic_dataframe();
+    df.drop_cols(["name", "registered"].into());
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "age", "score"],
+        vec![
+            row!(4, 23, 700),
+            row!(1, 41, 900),
+            row!(5, 33, 1200),
+            row!(2, 27, 200),
+            row!(3, 24, 800),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
+
+    let mut df = generic_dataframe();
+    let expected_df = Dataframe::from_rows(
+        vec!["name", "registered"],
+        vec![
+            row!("Sally", true),
+            row!("Jasper", false),
+            row!("Jake", true),
+            row!("Susie", true),
+            row!("Spruce", false),
+        ],
+    )
+    .unwrap();
+    df.retain_cols(["name", "registered"].into());
+    assert_eq!(df, expected_df);
+}

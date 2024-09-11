@@ -300,5 +300,18 @@ A consuming `df.into_iter()` is also available.
 ```rust
 df.to_csv("./tests/test.csv").unwrap();
 ```
+## Misc
+**Drop columns**
+
+Drop specified columns.
+```rust
+df.drop_cols(["name", "registered"].into());
+```
+**Retain columns**
+
+Drop all columns other than those specified.
+```rust
+df.retain_cols(["name", "registered"].into());
+```
 ## Examples
 For more examples, see `./tests/integration_test.rs`

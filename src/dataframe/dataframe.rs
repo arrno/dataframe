@@ -510,4 +510,11 @@ impl Dataframe {
     pub fn iter<'a>(&'a self) -> Iterrows<'a> {
         iterrows::Iterrows::new(self.to_slice())
     }
+
+    pub fn drop_cols(&mut self, col_names: HashSet<&str>) {
+        self.columns.retain(|col| !col_names.contains(col.name()))
+    }
+    pub fn retain_cols(&mut self, col_names: HashSet<&str>) {
+        self.columns.retain(|col| col_names.contains(col.name()))
+    }
 }
