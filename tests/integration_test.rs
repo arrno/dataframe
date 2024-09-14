@@ -178,6 +178,20 @@ fn filter_dataframe() {
     .unwrap();
     assert_eq!(df, expected_df);
 
+    let df = generic_dataframe()
+        .filter(not(exp("id", modl(2), 0)))
+        .unwrap();
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![
+            row!(1, "Jasper", 41, 900, false),
+            row!(5, "Jake", 33, 1200, true),
+            row!(3, "Spruce", 24, 800, false),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
+
     // regex
     let df = generic_dataframe()
         .filter(exp("name", regx(), "^J"))

@@ -188,6 +188,7 @@ pub enum Exp {
     Or(Or),
     And(And),
     ExpU(ExpU),
+    Not(Box<Exp>),
 }
 
 pub fn and(vexp: Vec<Exp>) -> Exp {
@@ -198,6 +199,9 @@ pub fn or(vexp: Vec<Exp>) -> Exp {
 }
 pub fn exp<T: ToCell>(target: &str, op: Op, val: T) -> Exp {
     Exp::ExpU(ExpU::new(target.to_string(), op, val))
+}
+pub fn not(exp: Exp) -> Exp {
+    Exp::Not(Box::new(exp))
 }
 
 impl Exp {
@@ -212,13 +216,7 @@ impl Exp {
                 _ => false,
             },
             Self::And(ex) => ex.vexp.iter().all(|e| e.evaluate(against)),
-        }
-    }
-    pub fn flatten(&mut self) -> Vec<&mut ExpU> {
-        match self {
-            Self::ExpU(ex) => vec![ex],
-            Self::Or(ex) => ex.vexp.iter_mut().map(|e| e.flatten()).flatten().collect(),
-            Self::And(ex) => ex.vexp.iter_mut().map(|e| e.flatten()).flatten().collect(),
+            Self::Not(ex) => !ex.evaluate(against),
         }
     }
 }

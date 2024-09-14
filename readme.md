@@ -256,11 +256,12 @@ df.retain_cols(["name", "registered"].into());
 ## Filter
 **Simple**
 ```rust
+// where age val is not null
 let df = df.filter(exp("age", neq(), None::<i64>)).unwrap();
 ```
 **Complex**
 
-Nest as many and/or/exp as needed
+Nest as many and/or/not/exp as needed
 ```rust
 let df = df
     .filter(or(vec![
@@ -268,6 +269,14 @@ let df = df
         exp("val", eq(), false),
     ]))
     .unwrap();
+```
+
+**Negate**
+
+Wrap any expression in `not()` to inverse the result
+```rust
+// filter odd values
+let df = df.filter(not(exp("age", modl(2), 0))).unwrap();
 ```
 Supported expression operations:
 - `eq()` equal
