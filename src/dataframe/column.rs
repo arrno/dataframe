@@ -1,4 +1,4 @@
-use crate::cell::*;
+use crate::{cell::*, dataframe::Dataframe};
 
 #[derive(Debug, PartialEq)]
 pub struct Col {
@@ -50,6 +50,44 @@ impl Col {
             values: vec![],
             typed: self.typed.clone(),
         }
+    }
+    // numeric only
+    pub fn describe(&self) -> Dataframe {
+        // if not numeric do: [count, unique, top, freq]
+        let mut df = Dataframe::new(None);
+        df.add_col::<u64>("count", vec![self.values.len() as u64])
+            .unwrap();
+        let mut min = match self.values.get(0) {
+            Some(cell) => cell,
+            None => &self.typed().zero(),
+        };
+        let mut max = min;
+        let mut total = min.clone();
+        self.values.iter().for_each(|cell| {
+            if cell < min {
+                min = cell
+            }
+            if cell > max {
+                max = cell
+            }
+            if let Some(c) = total.add(cell) {
+                total = c
+            }
+        });
+        df.add_cell_col(
+            "mean".to_string(),
+            vec![total.div_float(self.values.len() as f64).unwrap()],
+        )
+        .unwrap();
+        // std
+        df.add_cell_col("min".to_string(), vec![min.clone()])
+            .unwrap();
+        // 25%
+        // 50%
+        // 75%
+        df.add_cell_col("max".to_string(), vec![max.clone()])
+            .unwrap();
+        df
     }
 }
 

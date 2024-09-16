@@ -53,7 +53,42 @@ impl Cell {
         match self {
             Cell::Int(_) => true,
             Cell::Uint(_) => true,
+            Cell::Float(_) => true,
             _ => false,
+        }
+    }
+    pub fn add(&self, with: &Self) -> Option<Self> {
+        match self {
+            Cell::Int(val) => {
+                if let Cell::Int(with_val) = with {
+                    Some(Cell::Int(val + with_val))
+                } else {
+                    None
+                }
+            }
+            Cell::Uint(val) => {
+                if let Cell::Uint(with_val) = with {
+                    Some(Cell::Uint(val + with_val))
+                } else {
+                    None
+                }
+            }
+            Cell::Float(val) => {
+                if let Cell::Float(with_val) = with {
+                    Some(Cell::Float(val + with_val))
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
+    }
+    pub fn div_float(&self, with: f64) -> Option<Self> {
+        match self {
+            Cell::Int(val) => Some(Cell::Float(*val as f64 / with)),
+            Cell::Uint(val) => Some(Cell::Float(*val as f64 / with)),
+            Cell::Float(val) => Some(Cell::Float(*val / with)),
+            _ => None,
         }
     }
 }
