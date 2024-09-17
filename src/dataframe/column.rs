@@ -51,7 +51,7 @@ impl Col {
             typed: self.typed.clone(),
         }
     }
-    // numeric only
+    // TODO -> zero div err, bubble up err, non numeric
     pub fn describe(&self) -> Dataframe {
         // if not numeric do: [count, unique, top, freq]
         let mut df = Dataframe::new(None);
@@ -74,12 +74,28 @@ impl Col {
                 total = c
             }
         });
-        df.add_cell_col(
-            "mean".to_string(),
-            vec![total.div_float(self.values.len() as f64).unwrap()],
-        )
-        .unwrap();
-        // std
+        let mean = total.div_float(self.values.len() as f64).unwrap();
+        let mean_f = match mean {
+            Cell::Float(m) => m,
+            _ => 0.0,
+        };
+        df.add_cell_col("mean".to_string(), vec![mean]).unwrap();
+        let sum_sqred_diffs: f64 = self
+            .values
+            .iter()
+            .map(|cell| {
+                (match cell {
+                    Cell::Int(val) => *val as f64,
+                    Cell::Uint(val) => *val as f64,
+                    Cell::Float(val) => *val,
+                    _ => 0.0,
+                } - mean_f)
+                    .powi(2)
+            })
+            .sum();
+        let std = (sum_sqred_diffs / self.values.len() as f64).sqrt();
+        df.add_cell_col("std".to_string(), vec![Cell::Float(std)])
+            .unwrap();
         df.add_cell_col("min".to_string(), vec![min.clone()])
             .unwrap();
         // 25%

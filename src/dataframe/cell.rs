@@ -84,6 +84,9 @@ impl Cell {
         }
     }
     pub fn div_float(&self, with: f64) -> Option<Self> {
+        if with == 0.0 {
+            return None;
+        }
         match self {
             Cell::Int(val) => Some(Cell::Float(*val as f64 / with)),
             Cell::Uint(val) => Some(Cell::Float(*val as f64 / with)),
