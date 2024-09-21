@@ -13,4 +13,5 @@ fn main() {
     )
     .unwrap();
     df.print();
+    df.describe().print();
 }

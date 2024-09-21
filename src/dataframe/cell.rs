@@ -57,6 +57,12 @@ impl Cell {
             _ => false,
         }
     }
+    pub fn is_null(&self) -> bool {
+        match self {
+            Cell::Null(_) => true,
+            _ => false,
+        }
+    }
     pub fn add(&self, with: &Self) -> Option<Self> {
         match self {
             Cell::Int(val) => {
@@ -92,6 +98,14 @@ impl Cell {
             Cell::Uint(val) => Some(Cell::Float(*val as f64 / with)),
             Cell::Float(val) => Some(Cell::Float(*val / with)),
             _ => None,
+        }
+    }
+    pub fn to_float(&self) -> Cell {
+        match self {
+            Cell::Int(val) => Cell::Float(*val as f64),
+            Cell::Uint(val) => Cell::Float(*val as f64),
+            Cell::Float(val) => Cell::Float(*val),
+            _ => Cell::Null(Box::new(Cell::Float(0.0))),
         }
     }
 }

@@ -53,69 +53,55 @@ impl Col {
             typed: self.typed.clone(),
         }
     }
-    fn describe_object_empty(&self) -> Dataframe {
-        Dataframe::from_rows(
-            vec!["count", "unique", "top", "frequency"],
-            vec![vec![Cell::Int(0), null_float(), null_float(), null_float()]],
-        )
-        .unwrap()
+
+    pub fn describe(&self) -> Dataframe {
+        match self.typed.is_num() {
+            true => self.describe_numeric(),
+            false => self.describe_object(),
+        }
     }
 
-    pub fn describe_object(&self) -> Dataframe {
+    fn describe_object(&self) -> Dataframe {
         if self.values.len() == 0 {
-            return self.describe_object_empty();
+            return self.describe_with(vec![]);
         }
-        let mut df = Dataframe::new(None);
         let mut freq: HashMap<String, usize> = HashMap::new();
+        let mut first_index: HashMap<String, usize> = HashMap::new();
         let mut most = 0;
         let mut top = &self.typed;
-        self.values.iter().for_each(|cell| {
+        self.values.iter().enumerate().for_each(|(i, cell)| {
             let val = freq.entry(cell.as_string()).or_insert(0);
             *val += 1;
+            first_index.entry(cell.as_string()).or_insert(i);
             if *val > most {
                 most = *val;
                 top = cell;
             }
         });
-        df.add_col::<u64>("count", vec![self.values.len() as u64])
-            .unwrap();
-        df.add_cell_col("unique".to_string(), vec![Cell::Uint(freq.len() as u64)])
-            .unwrap();
-        df.add_cell_col("top".to_string(), vec![top.clone()])
-            .unwrap();
-        df.add_cell_col("frequency".to_string(), vec![Cell::Uint(most as u64)])
-            .unwrap();
-        df
+        self.describe_with(vec![
+            Cell::Float(self.values.len() as f64),
+            null_float(),
+            null_float(),
+            null_float(),
+            null_float(),
+            null_float(),
+            null_float(),
+            null_float(),
+            Cell::Float(freq.len() as f64),
+            Cell::Float(*first_index.get(&top.as_string()).unwrap() as f64),
+            Cell::Float(most as f64),
+        ])
     }
 
-    fn describe_num_empty(&self) -> Dataframe {
-        Dataframe::from_rows(
-            vec!["count", "mean", "std", "min", "25%", "50%", "75%", "max"],
-            vec![vec![
-                Cell::Int(0),
-                null_float(),
-                null_float(),
-                null_float(),
-                null_float(),
-                null_float(),
-                null_float(),
-                null_float(),
-            ]],
-        )
-        .unwrap()
-    }
-    // TODO -> zero div err, bubble up err
-    pub fn describe_numeric(&self) -> Dataframe {
+    fn describe_numeric(&self) -> Dataframe {
         if self.values.len() == 0 {
-            return self.describe_num_empty();
+            return self.describe_with(vec![]);
         }
-        let mut df = Dataframe::new(None);
-        df.add_col::<u64>("count", vec![self.values.len() as u64])
-            .unwrap();
         let mut total = self.typed.zero();
         let mut sorted_set: Vec<Cell> = self
             .values
             .iter()
+            .filter(|cell| !cell.is_null())
             .map(|cell| {
                 if let Some(c) = total.add(cell) {
                     total = c;
@@ -134,7 +120,6 @@ impl Col {
             Cell::Float(m) => m,
             _ => 0.0,
         };
-        df.add_cell_col("mean".to_string(), vec![mean]).unwrap();
         let sum_sqred_diffs: f64 = self
             .values
             .iter()
@@ -148,28 +133,62 @@ impl Col {
                     .powi(2)
             })
             .sum();
-        let std = (sum_sqred_diffs / self.values.len() as f64).sqrt();
-        df.add_cell_col("std".to_string(), vec![Cell::Float(std)])
-            .unwrap();
-        df.add_cell_col("min".to_string(), vec![min.clone()])
-            .unwrap();
-        match quartiles(&sorted_set) {
-            Some((quart, med, sev_fifth)) => {
-                df.add_cell_col("25%".to_string(), vec![quart]).unwrap();
-                df.add_cell_col("50%".to_string(), vec![med]).unwrap();
-                df.add_cell_col("75%".to_string(), vec![sev_fifth]).unwrap();
-            }
-            None => {
-                df.add_cell_col("25%".to_string(), vec![null_float()])
-                    .unwrap();
-                df.add_cell_col("50%".to_string(), vec![null_float()])
-                    .unwrap();
-                df.add_cell_col("75%".to_string(), vec![null_float()])
-                    .unwrap();
-            }
+        let std = ((sum_sqred_diffs / self.values.len() as f64).sqrt() * 100.0).round() / 100.0;
+        let (quart, med, sev_fifth) = match quartiles(&sorted_set) {
+            Some((quart, med, sev_fifth)) => (quart, med, sev_fifth),
+            None => (null_float(), null_float(), null_float()),
         };
-        df.add_cell_col("max".to_string(), vec![max.clone()])
-            .unwrap();
+        self.describe_with(vec![
+            Cell::Float(self.values.len() as f64),
+            mean,
+            Cell::Float(std),
+            min.to_float(),
+            quart,
+            med,
+            sev_fifth,
+            max.to_float(),
+            null_float(),
+            null_float(),
+            null_float(),
+        ])
+    }
+
+    fn describe_with(&self, values: Vec<Cell>) -> Dataframe {
+        let col = match values.len() {
+            0 => vec![
+                Cell::Float(0.0),
+                null_float(),
+                null_float(),
+                null_float(),
+                null_float(),
+                null_float(),
+                null_float(),
+                null_float(),
+                null_float(),
+                null_float(),
+                null_float(),
+            ],
+            _ => values,
+        };
+        let mut df = Dataframe::new(None);
+        df.add_cell_col(
+            "::".to_string(),
+            vec![
+                Cell::Str("count".to_string()),
+                Cell::Str("mean".to_string()),
+                Cell::Str("std".to_string()),
+                Cell::Str("min".to_string()),
+                Cell::Str("25%".to_string()),
+                Cell::Str("50%".to_string()),
+                Cell::Str("75%".to_string()),
+                Cell::Str("max".to_string()),
+                Cell::Str("unique".to_string()),
+                Cell::Str("top val @index".to_string()),
+                Cell::Str("frequency".to_string()),
+            ],
+        )
+        .unwrap();
+        df.add_cell_col(self.name.clone(), col).unwrap();
         df
     }
 }

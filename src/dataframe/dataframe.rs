@@ -175,9 +175,16 @@ impl Dataframe {
             .collect()
     }
 
-    pub fn set_columns(mut self, cols: Vec<Col>) -> Self {
+    pub fn set_columns(mut self, cols: Vec<Col>) -> Result<Self, Error> {
+        if cols.len() > 0 {
+            let l = cols[0].values().len();
+            match cols.iter().find(|c| c.values().len() != l) {
+                Some(_) => return Err(Error::new("Inconsistent data shape".to_string())),
+                None => (),
+            };
+        }
         self.columns = cols;
-        self
+        Ok(self)
     }
 
     pub fn add_col<T>(&mut self, name: &str, set: Vec<T>) -> Result<(), Error>
@@ -422,6 +429,12 @@ impl Dataframe {
             None => Err(Error::new("column not found.".to_string())),
         }
     }
+    fn take_column(self, name: &str) -> Result<Col, Error> {
+        match self.columns.into_iter().find(|col| col.name() == name) {
+            Some(col) => Ok(col),
+            None => Err(Error::new("column not found.".to_string())),
+        }
+    }
 
     pub fn column_mut(&mut self, name: &str) -> Result<&mut Col, Error> {
         match self.columns.iter_mut().find(|col| col.name() == name) {
@@ -516,5 +529,32 @@ impl Dataframe {
     }
     pub fn retain_cols(&mut self, col_names: HashSet<&str>) {
         self.columns.retain(|col| col_names.contains(col.name()))
+    }
+
+    pub fn describe(&self) -> Dataframe {
+        let df = Dataframe::new(None);
+        let mut cols = vec![Col::build(
+            "::".to_string(),
+            vec![
+                Cell::Str("count".to_string()),
+                Cell::Str("mean".to_string()),
+                Cell::Str("std".to_string()),
+                Cell::Str("min".to_string()),
+                Cell::Str("25%".to_string()),
+                Cell::Str("50%".to_string()),
+                Cell::Str("75%".to_string()),
+                Cell::Str("max".to_string()),
+                Cell::Str("unique".to_string()),
+                Cell::Str("top val @index".to_string()),
+                Cell::Str("frequency".to_string()),
+            ],
+            Cell::Str("".to_string()),
+        )];
+        cols.extend(
+            self.columns
+                .iter()
+                .map(|col| col.describe().take_column(col.name()).unwrap()),
+        );
+        df.set_columns(cols).unwrap()
     }
 }
