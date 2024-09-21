@@ -100,6 +100,29 @@ impl Cell {
             _ => None,
         }
     }
+    pub fn add_int(&self, with: &Self) -> Option<Self> {
+        match self {
+            Cell::Int(val) => match with {
+                Cell::Int(with_val) => Some(Cell::Int(val + with_val)),
+                Cell::Uint(with_val) => Some(Cell::Int(val + *with_val as i64)),
+                Cell::Float(with_val) => Some(Cell::Int(val + *with_val as i64)),
+                _ => None,
+            },
+            Cell::Uint(val) => match with {
+                Cell::Int(with_val) => Some(Cell::Int(*val as i64 + with_val)),
+                Cell::Uint(with_val) => Some(Cell::Int(*val as i64 + *with_val as i64)),
+                Cell::Float(with_val) => Some(Cell::Int(*val as i64 + *with_val as i64)),
+                _ => None,
+            },
+            Cell::Float(val) => match with {
+                Cell::Int(with_val) => Some(Cell::Int(*val as i64 + with_val)),
+                Cell::Uint(with_val) => Some(Cell::Int(*val as i64 + *with_val as i64)),
+                Cell::Float(with_val) => Some(Cell::Int(*val as i64 + *with_val as i64)),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
     pub fn to_float(&self) -> Cell {
         match self {
             Cell::Int(val) => Cell::Float(*val as f64),

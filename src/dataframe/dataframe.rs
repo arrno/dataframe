@@ -545,8 +545,8 @@ impl Dataframe {
                 Cell::Str("75%".to_string()),
                 Cell::Str("max".to_string()),
                 Cell::Str("unique".to_string()),
-                Cell::Str("top val @index".to_string()),
-                Cell::Str("frequency".to_string()),
+                Cell::Str("top idx".to_string()),
+                Cell::Str("freq".to_string()),
             ],
             Cell::Str("".to_string()),
         )];

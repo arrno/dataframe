@@ -103,7 +103,7 @@ impl Col {
             .iter()
             .filter(|cell| !cell.is_null())
             .map(|cell| {
-                if let Some(c) = total.add(cell) {
+                if let Some(c) = total.add_int(cell) {
                     total = c;
                 }
                 cell.clone()
@@ -183,8 +183,8 @@ impl Col {
                 Cell::Str("75%".to_string()),
                 Cell::Str("max".to_string()),
                 Cell::Str("unique".to_string()),
-                Cell::Str("top val @index".to_string()),
-                Cell::Str("frequency".to_string()),
+                Cell::Str("top idx".to_string()),
+                Cell::Str("freq".to_string()),
             ],
         )
         .unwrap();
@@ -207,29 +207,31 @@ fn quartiles(sorted_set: &Vec<Cell>) -> Option<(Cell, Cell, Cell)> {
         )),
         _ => {
             let med_idx = sorted_set.len() as f64 / 2.0;
-            let med = match med_idx.floor() {
-                med_idx => sorted_set
+            let med = if med_idx.floor() == med_idx {
+                sorted_set
                     .get(med_idx as usize)?
-                    .add(sorted_set.get(1 + med_idx as usize)?)?
-                    .div_float(2.0)?,
-                _ => sorted_set.get(med_idx.ceil() as usize)?.clone(),
+                    .add_int(sorted_set.get(med_idx as usize - 1)?)?
+                    .div_float(2.0)?
+            } else {
+                sorted_set.get(med_idx.floor() as usize)?.clone()
             };
-            let quart_idx = sorted_set.len() as f64 / 4.0;
-            let (quart, sev_fifth) = match quart_idx.floor() {
-                quart_idx => (
+            let quart_idx = med_idx.floor() / 2.0;
+            let (quart, sev_fifth) = if quart_idx.floor() == quart_idx {
+                (
                     sorted_set
                         .get(quart_idx as usize)?
-                        .add(sorted_set.get(1 + quart_idx as usize)?)?
+                        .add_int(sorted_set.get(quart_idx as usize - 1)?)?
                         .div_float(2.0)?,
                     sorted_set
                         .get((quart_idx * 3.0) as usize)?
-                        .add(sorted_set.get(1 + (quart_idx * 3.0) as usize)?)?
+                        .add_int(sorted_set.get((quart_idx * 3.0) as usize - 1)?)?
                         .div_float(2.0)?,
-                ),
-                _ => (
-                    sorted_set.get(quart_idx.ceil() as usize)?.clone(),
-                    sorted_set.get((quart_idx * 3.0).ceil() as usize)?.clone(),
-                ),
+                )
+            } else {
+                (
+                    sorted_set.get(quart_idx.floor() as usize)?.clone(),
+                    sorted_set.get((quart_idx * 3.0).floor() as usize)?.clone(),
+                )
             };
             Some((quart, med, sev_fifth))
         }
