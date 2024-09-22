@@ -134,18 +134,20 @@ Tail
 df.tail(5);
 ```
 ## Metadata 
-Print the shape and column types
+**Info**
+
+Print shape and types
 ```rust
 df.info();
 // DF Info
 // Shape: 3_col x 5_row
 // Columns: strangs <Str>, nums <Int>, null nums <Int>
 ```
-Get a vector of column names
+**Column names**
 ```rust
 df.col_names();
 ```
-Describe the dataframe
+**Describe**
 ```rust
 df.describe().print();
 // +---------+---------+------+-----------+
