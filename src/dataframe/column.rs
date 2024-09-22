@@ -115,7 +115,10 @@ impl Col {
         });
         let min = &sorted_set[0];
         let max = &sorted_set[sorted_set.len() - 1];
-        let mean = total.div_float(sorted_set.len() as f64).unwrap();
+        let mean = match total.div_float(sorted_set.len() as f64).unwrap() {
+            Cell::Float(val) => Cell::Float((val * 100.0).round() / 100.0),
+            _ => null_float(),
+        };
         let mean_f = match mean {
             Cell::Float(m) => m,
             _ => 0.0,
@@ -133,7 +136,12 @@ impl Col {
                     .powi(2)
             })
             .sum();
-        let std = ((sum_sqred_diffs / self.values.len() as f64).sqrt() * 100.0).round() / 100.0;
+        let std = match sorted_set.len() {
+            1 => null_float(),
+            _ => Cell::Float(
+                ((sum_sqred_diffs / self.values.len() as f64).sqrt() * 100.0).round() / 100.0,
+            ),
+        };
         let (quart, med, sev_fifth) = match quartiles(&sorted_set) {
             Some((quart, med, sev_fifth)) => (quart, med, sev_fifth),
             None => (null_float(), null_float(), null_float()),
@@ -141,7 +149,7 @@ impl Col {
         self.describe_with(vec![
             Cell::Float(self.values.len() as f64),
             mean,
-            Cell::Float(std),
+            std,
             min.to_float(),
             quart,
             med,

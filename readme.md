@@ -133,9 +133,36 @@ Tail
 ```rust
 df.tail(5);
 ```
-Info
+## Metadata 
+Print the shape and column types
 ```rust
 df.info();
+// DF Info
+// Shape: 3_col x 5_row
+// Columns: strangs <Str>, nums <Int>, null nums <Int>
+```
+Get a vector of column names
+```rust
+df.col_names();
+```
+Describe the dataframe
+```rust
+df.describe().print();
+// +---------+---------+------+-----------+
+// | ::      | strangs | nums | null nums |
+// +---------+---------+------+-----------+
+// | count   |       5 |    5 |         5 |
+// | mean    |    Null |    2 |    341.75 |
+// | std     |    Null | 1.41 |    301.15 |
+// | min     |    Null |    0 |       -10 |
+// | 25%     |    Null |  0.5 |        95 |
+// | 50%     |    Null |    2 |       300 |
+// | 75%     |    Null |  3.5 |     588.5 |
+// | max     |    Null |    4 |       777 |
+// | unique  |       5 | Null |      Null |
+// | top idx |       0 | Null |      Null |
+// | freq    |       1 | Null |      Null |
+// +---------+---------+------+-----------+
 ```
 ## Extend
 **Add column**
