@@ -197,42 +197,28 @@ fn null_float() -> Cell {
     Cell::Null(Box::new(Cell::Float(0.0)))
 }
 
+fn median(sorted_set: &[Cell]) -> Option<Cell> {
+    let med_idx = sorted_set.len() as f64 / 2.0;
+    let med = if med_idx.floor() == med_idx {
+        sorted_set
+            .get(med_idx as usize)?
+            .add_int(sorted_set.get(med_idx as usize - 1)?)?
+            .div_float(2.0)?
+    } else {
+        sorted_set.get(med_idx.floor() as usize)?.clone()
+    };
+    Some(med)
+}
 fn quartiles(sorted_set: &Vec<Cell>) -> Option<(Cell, Cell, Cell)> {
     match sorted_set.len() {
-        0 => None,
-        1 => Some((
-            sorted_set[0].clone(),
-            sorted_set[0].clone(),
-            sorted_set[0].clone(),
-        )),
+        0..=3 => None,
         _ => {
             let med_idx = sorted_set.len() as f64 / 2.0;
-            let med = if med_idx.floor() == med_idx {
-                sorted_set
-                    .get(med_idx as usize)?
-                    .add_int(sorted_set.get(med_idx as usize - 1)?)?
-                    .div_float(2.0)?
-            } else {
-                sorted_set.get(med_idx.floor() as usize)?.clone()
-            };
-            let quart_idx = med_idx.floor() / 2.0;
-            let (quart, sev_fifth) = if quart_idx.floor() == quart_idx {
-                (
-                    sorted_set
-                        .get(quart_idx as usize)?
-                        .add_int(sorted_set.get(quart_idx as usize - 1)?)?
-                        .div_float(2.0)?,
-                    sorted_set
-                        .get((quart_idx * 3.0) as usize)?
-                        .add_int(sorted_set.get((quart_idx * 3.0) as usize - 1)?)?
-                        .div_float(2.0)?,
-                )
-            } else {
-                (
-                    sorted_set.get(quart_idx.floor() as usize)?.clone(),
-                    sorted_set.get((quart_idx * 3.0).floor() as usize)?.clone(),
-                )
-            };
+            let med = median(&sorted_set)?;
+            let (quart, sev_fifth) = (
+                median(&sorted_set[0..med_idx.floor() as usize])?,
+                median(&sorted_set[med_idx.ceil() as usize..sorted_set.len()])?,
+            );
             Some((quart, med, sev_fifth))
         }
     }
