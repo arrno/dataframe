@@ -213,7 +213,7 @@ fn median(sorted_set: &[Cell]) -> Option<Cell> {
             .add_int(sorted_set.get(med_idx as usize - 1)?)?
             .div_float(2.0)?
     } else {
-        sorted_set.get(med_idx.floor() as usize)?.clone()
+        sorted_set.get(med_idx.floor() as usize)?.to_float()
     };
     Some(med)
 }

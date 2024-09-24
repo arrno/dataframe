@@ -4,7 +4,7 @@ use std::error::Error as StdError;
 use std::fs::File;
 
 pub use crate::cell::*;
-use crate::column::*;
+pub use crate::column::*;
 use crate::dataslice::*;
 pub use crate::expression::*;
 use crate::iterrows;

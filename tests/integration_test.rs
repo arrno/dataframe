@@ -644,3 +644,209 @@ fn drop() {
     df.retain_cols(["name", "registered"].into());
     assert_eq!(df, expected_df);
 }
+
+#[test]
+fn describe() {
+    let es: Vec<u32> = vec![];
+    let ds = Col::new("val".to_string(), es.clone()).describe();
+    assert_eq!(
+        ds,
+        Dataframe::from_rows(
+            vec!["::", "val"],
+            vec![
+                row!("count", 0.0),
+                row!("mean", None::<f64>),
+                row!("std", None::<f64>),
+                row!("min", None::<f64>),
+                row!("25%", None::<f64>),
+                row!("50%", None::<f64>),
+                row!("75%", None::<f64>),
+                row!("max", None::<f64>),
+                row!("unique", None::<f64>),
+                row!("top idx", None::<f64>),
+                row!("freq", None::<f64>),
+            ],
+        )
+        .unwrap(),
+    );
+    assert_eq!(
+        Col::new("val".to_string(), vec![1]).describe(),
+        Dataframe::from_rows(
+            vec!["::", "val"],
+            vec![
+                row!("count", 1.0),
+                row!("mean", 1.0),
+                row!("std", None::<f64>),
+                row!("min", 1.0),
+                row!("25%", None::<f64>),
+                row!("50%", None::<f64>),
+                row!("75%", None::<f64>),
+                row!("max", 1.0),
+                row!("unique", None::<f64>),
+                row!("top idx", None::<f64>),
+                row!("freq", None::<f64>),
+            ],
+        )
+        .unwrap()
+    );
+    assert_eq!(
+        Col::new("val".to_string(), (1..=2).collect::<Vec<u32>>()).describe(),
+        Dataframe::from_rows(
+            vec!["::", "val"],
+            vec![
+                row!("count", 2.0),
+                row!("mean", 1.5),
+                row!("std", 0.5),
+                row!("min", 1.0),
+                row!("25%", None::<f64>),
+                row!("50%", None::<f64>),
+                row!("75%", None::<f64>),
+                row!("max", 2.0),
+                row!("unique", None::<f64>),
+                row!("top idx", None::<f64>),
+                row!("freq", None::<f64>),
+            ],
+        )
+        .unwrap()
+    );
+    assert_eq!(
+        Col::new("val".to_string(), (1..=4).collect::<Vec<u32>>()).describe(),
+        Dataframe::from_rows(
+            vec!["::", "val"],
+            vec![
+                row!("count", 4.0),
+                row!("mean", 2.5),
+                row!("std", 1.12),
+                row!("min", 1.0),
+                row!("25%", 1.5),
+                row!("50%", 2.5),
+                row!("75%", 3.5),
+                row!("max", 4.0),
+                row!("unique", None::<f64>),
+                row!("top idx", None::<f64>),
+                row!("freq", None::<f64>),
+            ],
+        )
+        .unwrap()
+    );
+    assert_eq!(
+        Col::new("val".to_string(), (1..=5).collect::<Vec<u32>>()).describe(),
+        Dataframe::from_rows(
+            vec!["::", "val"],
+            vec![
+                row!("count", 5.0),
+                row!("mean", 3.0),
+                row!("std", 1.41),
+                row!("min", 1.0),
+                row!("25%", 1.5),
+                row!("50%", 3.0),
+                row!("75%", 4.5),
+                row!("max", 5.0),
+                row!("unique", None::<f64>),
+                row!("top idx", None::<f64>),
+                row!("freq", None::<f64>),
+            ],
+        )
+        .unwrap()
+    );
+    assert_eq!(
+        Col::new("val".to_string(), (1..=6).collect::<Vec<u32>>()).describe(),
+        Dataframe::from_rows(
+            vec!["::", "val"],
+            vec![
+                row!("count", 6.0),
+                row!("mean", 3.5),
+                row!("std", 1.71),
+                row!("min", 1.0),
+                row!("25%", 2.0),
+                row!("50%", 3.5),
+                row!("75%", 5.0),
+                row!("max", 6.0),
+                row!("unique", None::<f64>),
+                row!("top idx", None::<f64>),
+                row!("freq", None::<f64>),
+            ],
+        )
+        .unwrap()
+    );
+    assert_eq!(
+        Col::new("val".to_string(), (1..=7).collect::<Vec<u32>>()).describe(),
+        Dataframe::from_rows(
+            vec!["::", "val"],
+            vec![
+                row!("count", 7.0),
+                row!("mean", 4.0),
+                row!("std", 2.0),
+                row!("min", 1.0),
+                row!("25%", 2.0),
+                row!("50%", 4.0),
+                row!("75%", 6.0),
+                row!("max", 7.0),
+                row!("unique", None::<f64>),
+                row!("top idx", None::<f64>),
+                row!("freq", None::<f64>),
+            ],
+        )
+        .unwrap()
+    );
+    assert_eq!(
+        Col::new("val".to_string(), (1..=8).collect::<Vec<u32>>()).describe(),
+        Dataframe::from_rows(
+            vec!["::", "val"],
+            vec![
+                row!("count", 8.0),
+                row!("mean", 4.5),
+                row!("std", 2.29),
+                row!("min", 1.0),
+                row!("25%", 2.5),
+                row!("50%", 4.5),
+                row!("75%", 6.5),
+                row!("max", 8.0),
+                row!("unique", None::<f64>),
+                row!("top idx", None::<f64>),
+                row!("freq", None::<f64>),
+            ],
+        )
+        .unwrap()
+    );
+    assert_eq!(
+        Col::new("val".to_string(), (1..=9).collect::<Vec<u32>>()).describe(),
+        Dataframe::from_rows(
+            vec!["::", "val"],
+            vec![
+                row!("count", 9.0),
+                row!("mean", 5.0),
+                row!("std", 2.58),
+                row!("min", 1.0),
+                row!("25%", 2.5),
+                row!("50%", 5.0),
+                row!("75%", 7.5),
+                row!("max", 9.0),
+                row!("unique", None::<f64>),
+                row!("top idx", None::<f64>),
+                row!("freq", None::<f64>),
+            ],
+        )
+        .unwrap()
+    );
+    assert_eq!(
+        Col::new("val".to_string(), (1..=10).collect::<Vec<u32>>()).describe(),
+        Dataframe::from_rows(
+            vec!["::", "val"],
+            vec![
+                row!("count", 10.0),
+                row!("mean", 5.5),
+                row!("std", 2.87),
+                row!("min", 1.0),
+                row!("25%", 3.0),
+                row!("50%", 5.5),
+                row!("75%", 8.0),
+                row!("max", 10.0),
+                row!("unique", None::<f64>),
+                row!("top idx", None::<f64>),
+                row!("freq", None::<f64>),
+            ],
+        )
+        .unwrap()
+    );
+}
