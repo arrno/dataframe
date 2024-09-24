@@ -121,15 +121,15 @@ let df = Dataframe::from_rows(
 - `Null(Box<Cell>)`
 
 ## Display
-All
+**All**
 ```rust
 df.print();
 ```
-Head
+**Head**
 ```rust
 df.head(5);
 ```
-Tail
+**Tail**
 ```rust
 df.tail(5);
 ```
@@ -318,7 +318,7 @@ Supported expression operations:
 - `regx()` matches regex
 
 ## Mutate
-By column
+**By column**
 ```rust
 df.col_mut("id").unwrap().iter_mut().for_each(|cell| {
     if let Cell::Int(val) = cell {
@@ -326,7 +326,7 @@ df.col_mut("id").unwrap().iter_mut().for_each(|cell| {
     }
 });
 ```
-By cell
+**By cell**
 ```rust
 if let Cell::Int(val) = df.cell_mut((2, "age")).unwrap() {
     *val += 2;

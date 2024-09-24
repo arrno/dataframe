@@ -849,4 +849,24 @@ fn describe() {
         )
         .unwrap()
     );
+    assert_eq!(
+        Col::new("val".to_string(), vec!["A", "B", "C", "B", "C", "B", "Z"]).describe(),
+        Dataframe::from_rows(
+            vec!["::", "val"],
+            vec![
+                row!("count", 7.0),
+                row!("mean", None::<f64>),
+                row!("std", None::<f64>),
+                row!("min", None::<f64>),
+                row!("25%", None::<f64>),
+                row!("50%", None::<f64>),
+                row!("75%", None::<f64>),
+                row!("max", None::<f64>),
+                row!("unique", 4.0),
+                row!("top idx", 1.0),
+                row!("freq", 3.0),
+            ],
+        )
+        .unwrap()
+    );
 }
