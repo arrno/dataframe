@@ -13,7 +13,4 @@ fn main() {
     )
     .unwrap();
     df.print();
-    Col::new("val".to_string(), (1..=5).collect::<Vec<u32>>())
-        .describe()
-        .print();
 }
