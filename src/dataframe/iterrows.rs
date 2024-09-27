@@ -97,3 +97,39 @@ impl<'a> Iterator for IterrowsMut<'a> {
         }
     }
 }
+
+// chunk
+pub struct IterChunk<'a> {
+    data_slice: DataSlice<'a>,
+    chunk_size: usize,
+    index: usize,
+}
+impl<'a> IterChunk<'a> {
+    pub fn new(slice: DataSlice<'a>, size: usize) -> Self {
+        Self {
+            data_slice: slice,
+            chunk_size: size,
+            index: 0,
+        }
+    }
+}
+impl<'a> Iterator for IterChunk<'a> {
+    type Item = Dataframe;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.data_slice.length() {
+            self.index += self.chunk_size;
+            Some(
+                self.data_slice
+                    .slice(
+                        self.index - self.chunk_size,
+                        std::cmp::min(self.index, self.data_slice.length()),
+                    )
+                    .unwrap()
+                    .to_dataframe(),
+            )
+        } else {
+            None
+        }
+    }
+}

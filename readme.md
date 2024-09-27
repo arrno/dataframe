@@ -283,6 +283,16 @@ df.retain_cols(["name", "registered"].into());
 ```
 
 ## Filter
+Supported operations:
+- `eq()` equal
+- `neq()` not equal
+- `gt()` greater than
+- `lt()` less than
+- `gte()` greater or equal than
+- `lte()` less or equal than
+- `modl(i: i64)` mod `i` is
+- `regx()` matches regex
+
 **Simple**
 ```rust
 // where age val is not null
@@ -307,16 +317,6 @@ Wrap any expression in `not()` to inverse the result
 // filter odd values
 let df = df.filter(not(exp("age", modl(2), 0))).unwrap();
 ```
-Supported expression operations:
-- `eq()` equal
-- `neq()` not equal
-- `gt()` greater than
-- `lt()` less than
-- `gte()` greater or equal than
-- `lte()` less or equal than
-- `modl(i: i64)` mod `i` is
-- `regx()` matches regex
-
 ## Mutate
 **By column**
 ```rust
@@ -351,6 +351,7 @@ let sorted = df
     .unwrap();
 ```
 ## Iterate
+**Iter**
 ```rust
 let unames = df
     .iter()
@@ -360,7 +361,14 @@ let unames = df
     })
     .collect::<Vec<&str>>();
 ```
+**Into iter**
+
 A consuming `df.into_iter()` is also available.
+
+**Iter chunk**
+```rust
+df.iter_chunk(2).for_each(|chunk| chunk.print());
+```
 ## Store
 **To csv**
 ```rust

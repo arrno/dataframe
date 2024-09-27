@@ -544,6 +544,10 @@ impl Dataframe {
         iterrows::Iterrows::new(self.to_slice())
     }
 
+    pub fn iter_chunk<'a>(&'a self, size: usize) -> IterChunk<'a> {
+        iterrows::IterChunk::new(self.to_slice(), size)
+    }
+
     pub fn drop_cols(&mut self, col_names: HashSet<&str>) {
         self.columns.retain(|col| !col_names.contains(col.name()))
     }

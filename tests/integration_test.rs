@@ -594,6 +594,37 @@ fn iterrows() {
             panic!("dataframe iter index out of bounds.")
         }
     });
+
+    // chunk
+    assert_eq!(
+        generic_dataframe()
+            .iter_chunk(2)
+            .map(|df| df)
+            .collect::<Vec<Dataframe>>(),
+        vec![
+            Dataframe::from_rows(
+                vec!["id", "name", "age", "score", "registered"],
+                vec![
+                    row!(4, "Sally", 23, 700, true),
+                    row!(1, "Jasper", 41, 900, false),
+                ],
+            )
+            .unwrap(),
+            Dataframe::from_rows(
+                vec!["id", "name", "age", "score", "registered"],
+                vec![
+                    row!(5, "Jake", 33, 1200, true),
+                    row!(2, "Susie", 27, 200, true),
+                ],
+            )
+            .unwrap(),
+            Dataframe::from_rows(
+                vec!["id", "name", "age", "score", "registered"],
+                vec![row!(3, "Spruce", 24, 800, false),],
+            )
+            .unwrap()
+        ]
+    )
 }
 
 #[test]
