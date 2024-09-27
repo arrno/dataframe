@@ -94,6 +94,22 @@ impl Dataframe {
         }
         Ok(df)
     }
+    pub fn to_rows(self) -> (Vec<String>, Vec<Vec<Cell>>) {
+        let mut results: Vec<Vec<Cell>> = (0..self.length()).map(|_| vec![]).collect();
+        let names = self
+            .columns
+            .into_iter()
+            .map(|c| {
+                let name = c.name().to_string();
+                c.take_values()
+                    .into_iter()
+                    .enumerate()
+                    .for_each(|(col_idx, val)| results[col_idx].push(val));
+                name
+            })
+            .collect::<Vec<String>>();
+        (names, results)
+    }
 
     pub fn from_csv<T>(file_path: &str) -> Result<Self, Error>
     where
@@ -421,6 +437,10 @@ impl Dataframe {
             }
         });
         Ok(())
+    }
+
+    pub fn into_sort(self) -> DataSort {
+        DataSort::new(self)
     }
 
     pub fn column(&self, name: &str) -> Result<&Col, Error> {

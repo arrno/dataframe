@@ -405,6 +405,45 @@ fn sort_dataframe() {
 }
 
 #[test]
+fn into_sort_dataframe() {
+    let df = Dataframe::from_rows(
+        vec!["one", "two", "three"],
+        vec![
+            row!("B", "A", "C"),
+            row!("A", "C", "C"),
+            row!("A", "B", "C"),
+            row!("A", "B", "A"),
+            row!("B", "C", "A"),
+            row!("A", "C", "B"),
+            row!("B", "C", "B"),
+            row!("B", "A", "B"),
+        ],
+    )
+    .unwrap()
+    .into_sort()
+    .sort("one", asc())
+    .sort("two", asc())
+    .sort("three", asc())
+    .collect()
+    .unwrap();
+
+    let expected = Dataframe::from_rows(
+        vec!["one", "two", "three"],
+        vec![
+            row!("A", "B", "A"),
+            row!("A", "B", "C"),
+            row!("A", "C", "B"),
+            row!("A", "C", "C"),
+            row!("B", "A", "B"),
+            row!("B", "A", "C"),
+            row!("B", "C", "A"),
+            row!("B", "C", "B"),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected);
+}
+#[test]
 fn opt_dataframe() {
     // Not Null
     let mut df = option_dataframe();

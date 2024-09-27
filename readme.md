@@ -173,7 +173,7 @@ df.add_col("new column", vec![2, 4, 6]).unwrap();
 ```
 **Add row**
 ```rust
-df.add_row(row!["Jane", 44, true]).unwrap();
+df.add_row(row!("Jane", 44, true)).unwrap();
 ```
 **Concat**
 ```rust
@@ -333,9 +333,22 @@ if let Cell::Int(val) = df.cell_mut((2, "age")).unwrap() {
 }
 ```
 ## Sort
+**Simple**
 ```rust
 // sort by, sort dir [asc() | desc()]
 df.sort("at", asc()).unwrap();
+```
+**Complex**
+
+Use this method for multi column sorting
+```rust
+let sorted = df
+    .into_sort()
+    .sort("one", asc())
+    .sort("two", asc())
+    .sort("three", asc())
+    .collect()
+    .unwrap();
 ```
 ## Iterate
 ```rust
