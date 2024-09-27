@@ -27,6 +27,22 @@ impl Cell {
             Cell::Null(cell) => cell.zero(),
         }
     }
+    pub fn null(&self) -> Self {
+        match self {
+            Cell::Int(_) => Cell::Null(Box::new(Cell::Int(0))),
+            Cell::Uint(_) => Cell::Null(Box::new(Cell::Uint(0))),
+            Cell::Str(_) => Cell::Null(Box::new(Cell::Str(String::new()))),
+            Cell::Bool(_) => Cell::Null(Box::new(Cell::Bool(false))),
+            Cell::Float(_) => Cell::Null(Box::new(Cell::Float(0.0))),
+            Cell::DateTime(_) => Cell::Null(Box::new(Cell::DateTime(
+                NaiveDate::from_ymd_opt(30, 4, 3)
+                    .unwrap()
+                    .and_hms_opt(15, 0, 0)
+                    .unwrap(),
+            ))),
+            Cell::Null(_) => self.clone(),
+        }
+    }
     pub fn as_string(&self) -> String {
         match self {
             Cell::Int(x) => format!("{x}"),

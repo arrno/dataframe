@@ -340,6 +340,12 @@ impl Dataframe {
     }
 
     pub fn join(&self, with: &Dataframe, on: (&str, &str)) -> Result<Self, Error> {
+        self.do_join(with, on, false)
+    }
+    pub fn left_join(&self, with: &Dataframe, on: (&str, &str)) -> Result<Self, Error> {
+        self.do_join(with, on, true)
+    }
+    fn do_join(&self, with: &Dataframe, on: (&str, &str), left: bool) -> Result<Self, Error> {
         let self_index = self.column(on.0)?;
         let with_index = with.column(on.1)?;
         let match_count = self.match_count(&with);
@@ -398,6 +404,21 @@ impl Dataframe {
                                 .push(col.values()[*with_i].clone())
                         });
                 })
+            } else if left {
+                self.columns.iter().enumerate().for_each(|(col_i, col)| {
+                    new_df.columns[col_i]
+                        .values_mut()
+                        .push(col.values()[i].clone())
+                });
+                with_slice
+                    .columns()
+                    .iter()
+                    .enumerate()
+                    .for_each(|(col_j, col)| {
+                        new_df.columns[self.columns.len() + col_j]
+                            .values_mut()
+                            .push(col.typed().null())
+                    });
             }
         });
         Ok(new_df)

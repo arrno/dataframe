@@ -191,6 +191,8 @@ df.concat(
 .unwrap();
 ```
 **Join**
+
+Inner
 ```rust
 // join(other_df, (left_col, right_col))
 let result_df = df
@@ -205,6 +207,20 @@ let result_df = df
         )
         .unwrap(),
         ("id", "user_id"),
+    )
+    .unwrap();
+```
+
+Left
+```rust
+let result_df = df
+    .left_join(
+        &Dataframe::from_rows(
+            vec!["user_id", "score", "rate"],
+            vec![row!(1, 700, 0.4)],
+        )
+        .unwrap(),
+        ("nums", "user_id"),
     )
     .unwrap();
 ```
