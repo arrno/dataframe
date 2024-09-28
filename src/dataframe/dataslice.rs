@@ -97,6 +97,60 @@ impl<'a> DataSlice<'a> {
     pub fn iter(self) -> Iterrows<'a> {
         iterrows::Iterrows::new(self)
     }
+
+    pub fn chunk_by(&self, by: &str) -> Result<HashMap<String, Dataframe>, Error> {
+        let mut chunks: HashMap<String, Vec<Vec<Cell>>> = HashMap::new();
+        let by_idx = match self
+            .columns
+            .iter()
+            .enumerate()
+            .find(|(_, c)| c.name() == by)
+            .map(|(i, _)| i)
+        {
+            Some(v) => v,
+            None => return Err(Error::new("Group by col not found".to_string())),
+        };
+        (0..self.length()).for_each(|i| {
+            let chunk = chunks
+                .entry(
+                    self.columns
+                        .get(by_idx)
+                        .unwrap()
+                        .values()
+                        .get(i)
+                        .unwrap()
+                        .as_string(),
+                )
+                .or_insert(self.columns.iter().map(|_| vec![]).collect());
+            self.columns
+                .iter()
+                .enumerate()
+                .for_each(|(j, col)| chunk.get_mut(j).unwrap().push(col.values()[i].clone()));
+        });
+        Ok(chunks
+            .into_iter()
+            .map(|(key, df_cols)| {
+                (
+                    key,
+                    Dataframe::new(None)
+                        .set_columns(
+                            df_cols
+                                .into_iter()
+                                .enumerate()
+                                .map(|(i, values)| {
+                                    Col::build(
+                                        self.columns[i].name().to_string(),
+                                        values,
+                                        self.columns[i].typed().clone(),
+                                    )
+                                })
+                                .collect(),
+                        )
+                        .unwrap(),
+                )
+            })
+            .collect())
+    }
 }
 
 impl<'a> From<&'a Dataframe> for DataSlice<'a> {

@@ -23,11 +23,14 @@ pub struct DataGroup<'a> {
 }
 
 impl<'a> DataGroup<'a> {
-    pub fn new(df: DataSlice<'a>, by: String) -> Self {
-        DataGroup {
-            dataslice: df,
-            by: by,
-            selects: vec![],
+    pub fn new(df: DataSlice<'a>, by: String) -> Result<Self, Error> {
+        match df.columns().iter().find(|col| col.name() == by) {
+            Some(_) => Ok(DataGroup {
+                dataslice: df,
+                by: by,
+                selects: vec![],
+            }),
+            None => Err(Error::new("Groupby column not found".to_string())),
         }
     }
     pub fn select(&'a mut self, column: &str, reducer: Reducer) -> Result<(), Error> {
@@ -42,7 +45,7 @@ impl<'a> DataGroup<'a> {
                 column_name: name.to_string(),
                 reducer: reducer,
             },
-            None => return Err(Error::new("Column not found.".to_string())),
+            None => return Err(Error::new("Column not found".to_string())),
         };
         self.selects.push(select);
         Ok(())

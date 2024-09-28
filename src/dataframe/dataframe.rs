@@ -7,6 +7,7 @@ pub use crate::cell::*;
 pub use crate::column::*;
 use crate::dataslice::*;
 pub use crate::expression::*;
+use crate::group::DataGroup;
 use crate::iterrows;
 use crate::iterrows::*;
 pub use crate::row;
@@ -467,20 +468,20 @@ impl Dataframe {
     pub fn column(&self, name: &str) -> Result<&Col, Error> {
         match self.columns.iter().find(|col| col.name() == name) {
             Some(col) => Ok(col),
-            None => Err(Error::new("column not found.".to_string())),
+            None => Err(Error::new("Column not found".to_string())),
         }
     }
     fn take_column(self, name: &str) -> Result<Col, Error> {
         match self.columns.into_iter().find(|col| col.name() == name) {
             Some(col) => Ok(col),
-            None => Err(Error::new("column not found.".to_string())),
+            None => Err(Error::new("Column not found".to_string())),
         }
     }
 
     pub fn column_mut(&mut self, name: &str) -> Result<&mut Col, Error> {
         match self.columns.iter_mut().find(|col| col.name() == name) {
             Some(col) => Ok(col),
-            None => Err(Error::new("column not found.".to_string())),
+            None => Err(Error::new("Column not found".to_string())),
         }
     }
 
@@ -601,5 +602,9 @@ impl Dataframe {
                 .map(|col| col.describe().take_column(col.name()).unwrap()),
         );
         df.set_columns(cols).unwrap()
+    }
+
+    pub fn group_by(&self, by: String) -> Result<DataGroup, Error> {
+        DataGroup::new(self.to_slice(), by)
     }
 }

@@ -696,11 +696,11 @@ fn errors() {
     }
     match df.column("unknown") {
         Ok(_) => panic!("Missing col err not detected"),
-        Err(err) => assert_eq!(err.to_string(), "column not found.".to_string()),
+        Err(err) => assert_eq!(err.to_string(), "Column not found".to_string()),
     }
     match df.column_mut("unknown") {
         Ok(_) => panic!("Missing col err not detected"),
-        Err(err) => assert_eq!(err.to_string(), "column not found.".to_string()),
+        Err(err) => assert_eq!(err.to_string(), "Column not found".to_string()),
     }
     match df.add_row(row!(4, "Sally", 23, 700, "true")) {
         Ok(_) => panic!("Type err not detected"),
