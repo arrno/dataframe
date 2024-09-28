@@ -2,12 +2,13 @@ use std::collections::HashMap;
 
 use crate::{
     cell::{self, Cell, ToCell},
-    col::Col,
+    column::Col,
     dataframe::Dataframe,
     dataslice::DataSlice,
     util::Error,
 };
 
+#[derive(Eq, PartialEq, Hash)]
 enum Reducer {
     Count,
     Sum,
@@ -30,19 +31,58 @@ pub struct DataGroup<'a> {
     selects: Vec<Select>,
 }
 
-// struct Transformer {
-//     Reducers: HashMap<Reducer, dyn FnOnce(Col) -> Cell>
-// };
+struct ReduceRouter(HashMap<Reducer, fn(&Col) -> cell::Cell>);
 
-// impl Transformer {
-//     pub fn new() -> Transformer {
-//         let mut map = HashMap::new()
-//         map.insert();
-//         Transformer{
-//             Reducers: map
-//         }
-//     }
-// }
+fn count(col: &Col) -> Cell {
+    Cell::Uint(col.count() as u64)
+}
+fn sum(col: &Col) -> Cell {
+    col.sum().unwrap().to_cell()
+}
+fn prod(col: &Col) -> Cell {
+    col.product().unwrap().to_cell()
+}
+fn mean(col: &Col) -> Cell {
+    col.mean().unwrap().to_cell()
+}
+fn min(col: &Col) -> Cell {
+    col.min().unwrap().to_cell()
+}
+fn max(col: &Col) -> Cell {
+    col.max().unwrap().to_cell()
+}
+fn top(col: &Col) -> Cell {
+    match col.top() {
+        Some((cell, _, _, _)) => cell,
+        None => col.typed().null(),
+    }
+}
+fn unique(col: &Col) -> Cell {
+    cell::Cell::Uint(col.unique() as u64)
+}
+fn coalesce(col: &Col) -> Cell {
+    col.coalesce().unwrap().clone()
+}
+fn non_null(col: &Col) -> Cell {
+    cell::Cell::Uint(col.non_null() as u64)
+}
+
+impl ReduceRouter {
+    pub fn new() -> ReduceRouter {
+        let mut map = HashMap::new();
+        map.insert(Reducer::Count, count as fn(&Col) -> cell::Cell);
+        map.insert(Reducer::Sum, sum as fn(&Col) -> cell::Cell);
+        map.insert(Reducer::Prod, prod as fn(&Col) -> cell::Cell);
+        map.insert(Reducer::Mean, mean as fn(&Col) -> cell::Cell);
+        map.insert(Reducer::Min, min as fn(&Col) -> cell::Cell);
+        map.insert(Reducer::Max, max as fn(&Col) -> cell::Cell);
+        map.insert(Reducer::Top, top as fn(&Col) -> cell::Cell);
+        map.insert(Reducer::Unique, unique as fn(&Col) -> cell::Cell);
+        map.insert(Reducer::Coalesce, coalesce as fn(&Col) -> cell::Cell);
+        map.insert(Reducer::NonNull, non_null as fn(&Col) -> cell::Cell);
+        ReduceRouter(map)
+    }
+}
 
 impl<'a> DataGroup<'a> {
     pub fn new(df: DataSlice<'a>, by: String) -> Result<Self, Error> {
@@ -73,6 +113,7 @@ impl<'a> DataGroup<'a> {
         Ok(())
     }
     pub fn collect(self) -> Dataframe {
+        let red_rout = ReduceRouter::new();
         let name_indices = self
             .dataslice
             .columns()
@@ -95,21 +136,7 @@ impl<'a> DataGroup<'a> {
                         .map(|select| {
                             let col = &df.columns()
                                 [*name_indices.get(select.column_name.as_str()).unwrap()];
-                            match &select.reducer {
-                                Reducer::Count => cell::Cell::Uint(col.count() as u64),
-                                Reducer::Max => col.max().unwrap().to_cell(),
-                                Reducer::Min => col.min().unwrap().to_cell(),
-                                Reducer::Sum => col.sum().unwrap().to_cell(),
-                                Reducer::Mean => col.mean().unwrap().to_cell(),
-                                Reducer::Top => match col.top() {
-                                    Some((cell, _, _, _)) => cell,
-                                    None => col.typed().null(),
-                                },
-                                Reducer::Unique => cell::Cell::Uint(col.unique() as u64),
-                                Reducer::Coalesce => col.coalesce().unwrap().clone(),
-                                Reducer::NonNull => cell::Cell::Uint(col.non_null() as u64),
-                                Reducer::Prod => col.product().unwrap().to_cell(),
-                            }
+                            red_rout.0.get(&select.reducer).unwrap()(col)
                         })
                         .collect::<Vec<Cell>>()
                 })
