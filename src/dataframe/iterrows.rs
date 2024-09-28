@@ -65,39 +65,6 @@ impl IntoIterator for Dataframe {
     }
 }
 
-// TODO
-pub struct IterrowsMut<'a> {
-    data_slice: DataSliceMut<'a>,
-    index: usize,
-}
-impl<'a> IterrowsMut<'a> {
-    pub fn new(slice: DataSliceMut<'a>) -> Self {
-        Self {
-            data_slice: slice,
-            index: 0,
-        }
-    }
-}
-
-impl<'a> Iterator for IterrowsMut<'a> {
-    type Item = HashMap<String, &'a &'a mut Cell>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.data_slice.length() {
-            self.index += 1;
-            Some(
-                self.data_slice
-                    .columns()
-                    .iter()
-                    .map(|col| (col.name().to_string(), &col.values()[self.index - 1]))
-                    .collect::<HashMap<String, &'a &'a mut Cell>>(),
-            )
-        } else {
-            None
-        }
-    }
-}
-
 // chunk
 pub struct IterChunk<'a> {
     data_slice: DataSlice<'a>,
@@ -133,3 +100,36 @@ impl<'a> Iterator for IterChunk<'a> {
         }
     }
 }
+
+// // TODO
+// pub struct IterrowsMut<'a> {
+//     data_slice: DataSliceMut<'a>,
+//     index: usize,
+// }
+// impl<'a> IterrowsMut<'a> {
+//     pub fn new(slice: DataSliceMut<'a>) -> Self {
+//         Self {
+//             data_slice: slice,
+//             index: 0,
+//         }
+//     }
+// }
+
+// impl<'a> Iterator for IterrowsMut<'a> {
+//     type Item = HashMap<String, &'a &'a mut Cell>;
+
+//     fn next(&mut self) -> Option<Self::Item> {
+//         if self.index < self.data_slice.length() {
+//             self.index += 1;
+//             Some(
+//                 self.data_slice
+//                     .columns()
+//                     .iter()
+//                     .map(|col| (col.name().to_string(), &col.values()[self.index - 1]))
+//                     .collect::<HashMap<String, &'a &'a mut Cell>>(),
+//             )
+//         } else {
+//             None
+//         }
+//     }
+// }
