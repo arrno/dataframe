@@ -199,6 +199,17 @@ impl Col {
         df.add_cell_col(self.name.clone(), col).unwrap();
         df
     }
+
+    pub fn count() {}
+    pub fn sum() {}
+    pub fn prod() {}
+    pub fn mean() {}
+    pub fn max() {}
+    pub fn min() {}
+    pub fn top() {}
+    pub fn unique() {}
+    pub fn coalesce() {}
+    pub fn non_null() {}
 }
 
 fn null_float() -> Cell {
