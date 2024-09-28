@@ -9,7 +9,7 @@ use crate::{
 };
 
 #[derive(Eq, PartialEq, Hash)]
-enum Reducer {
+pub enum Reducer {
     Count,
     Sum,
     Prod,
