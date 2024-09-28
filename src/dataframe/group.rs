@@ -1,4 +1,4 @@
-use crate::{column::Col, dataframe::Dataframe, util::Error};
+use crate::{dataframe::Dataframe, dataslice::DataSlice, util::Error};
 
 enum Reducer {
     Count,
@@ -12,34 +12,35 @@ enum Reducer {
     Coalesce,
     NonNull,
 }
-struct Select<'a> {
-    Col: &'a Col,
-    Reducer: Reducer,
+struct Select {
+    column_name: String,
+    reducer: Reducer,
 }
 pub struct DataGroup<'a> {
-    dataframe: Dataframe,
+    dataslice: DataSlice<'a>,
     by: String,
-    selects: Vec<Select<'a>>,
+    selects: Vec<Select>,
 }
 
 impl<'a> DataGroup<'a> {
-    pub fn new(df: Dataframe, by: String) -> Self {
+    pub fn new(df: DataSlice<'a>, by: String) -> Self {
         DataGroup {
-            dataframe: df,
+            dataslice: df,
             by: by,
             selects: vec![],
         }
     }
     pub fn select(&'a mut self, column: &str, reducer: Reducer) -> Result<(), Error> {
         let select = match self
-            .dataframe
+            .dataslice
             .columns()
             .iter()
-            .find(|col| col.name() == column)
+            .map(|col| col.name())
+            .find(|name| name == &column)
         {
-            Some(col) => Select {
-                Col: col,
-                Reducer: reducer,
+            Some(name) => Select {
+                column_name: name.to_string(),
+                reducer: reducer,
             },
             None => return Err(Error::new("Column not found.".to_string())),
         };
@@ -47,6 +48,9 @@ impl<'a> DataGroup<'a> {
         Ok(())
     }
     pub fn collect(&self) -> Dataframe {
+        // chunk df via by column
+        // each by column is a row
+        // each select is a column for the reduced chunk val
         Dataframe::new(None)
     }
 }

@@ -147,6 +147,14 @@ impl Cell {
             _ => Cell::Null(Box::new(Cell::Float(0.0))),
         }
     }
+    pub fn to_float_val(&self) -> f64 {
+        match self {
+            Cell::Int(val) => *val as f64,
+            Cell::Uint(val) => *val as f64,
+            Cell::Float(val) => *val,
+            _ => 0.0,
+        }
+    }
 }
 
 pub trait ToCell {

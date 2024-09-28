@@ -1,6 +1,6 @@
 use crate::{cell::*, dataframe::Dataframe};
 use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, PartialEq)]
 pub struct Col {
@@ -65,19 +65,7 @@ impl Col {
         if self.values.len() == 0 {
             return self.describe_with(vec![]);
         }
-        let mut freq: HashMap<String, usize> = HashMap::new();
-        let mut first_index: HashMap<String, usize> = HashMap::new();
-        let mut most = 0;
-        let mut top = &self.typed;
-        self.values.iter().enumerate().for_each(|(i, cell)| {
-            let val = freq.entry(cell.as_string()).or_insert(0);
-            *val += 1;
-            first_index.entry(cell.as_string()).or_insert(i);
-            if *val > most {
-                most = *val;
-                top = cell;
-            }
-        });
+        let (_, unique, first_index, most) = self.top().unwrap();
         self.describe_with(vec![
             Cell::Float(self.values.len() as f64),
             null_float(),
@@ -87,9 +75,9 @@ impl Col {
             null_float(),
             null_float(),
             null_float(),
-            Cell::Float(freq.len() as f64),
-            Cell::Float(*first_index.get(&top.as_string()).unwrap() as f64),
-            Cell::Float(most as f64),
+            Cell::Float(unique),
+            Cell::Float(first_index),
+            Cell::Float(most),
         ])
     }
 
@@ -200,16 +188,90 @@ impl Col {
         df
     }
 
-    pub fn count() {}
-    pub fn sum() {}
-    pub fn prod() {}
-    pub fn mean() {}
-    pub fn max() {}
-    pub fn min() {}
-    pub fn top() {}
-    pub fn unique() {}
-    pub fn coalesce() {}
-    pub fn non_null() {}
+    pub fn count(&self) -> usize {
+        self.values.len()
+    }
+    pub fn sum(&self) -> Option<f64> {
+        match self.typed.is_num() {
+            true => Some(self.values.iter().map(|cell| cell.to_float_val()).sum()),
+            false => None,
+        }
+    }
+    pub fn product(&self) -> Option<f64> {
+        match self.typed.is_num() {
+            true => Some(self.values.iter().map(|cell| cell.to_float_val()).product()),
+            false => None,
+        }
+    }
+    pub fn mean(&self) -> Option<f64> {
+        match self.typed.is_num() {
+            true => Some(
+                self.values
+                    .iter()
+                    .map(|cell| cell.to_float_val())
+                    .sum::<f64>()
+                    / self.values.len() as f64,
+            ),
+            false => None,
+        }
+    }
+    pub fn max(&self) -> Option<f64> {
+        match self.typed.is_num() {
+            true => self
+                .values
+                .iter()
+                .map(|cell| cell.to_float_val())
+                .max_by(|x, y| x.total_cmp(y)),
+            false => None,
+        }
+    }
+    pub fn min(&self) -> Option<f64> {
+        match self.typed.is_num() {
+            true => self
+                .values
+                .iter()
+                .map(|cell| cell.to_float_val())
+                .min_by(|x, y| x.total_cmp(y)),
+            false => None,
+        }
+    }
+    pub fn top(&self) -> Option<(Cell, f64, f64, f64)> {
+        if self.values.len() == 0 {
+            return None;
+        }
+        let mut freq: HashMap<String, usize> = HashMap::new();
+        let mut first_index: HashMap<String, usize> = HashMap::new();
+        let mut most = 0;
+        let mut top = &self.typed.zero();
+        self.values.iter().enumerate().for_each(|(i, cell)| {
+            let val = freq.entry(cell.as_string()).or_insert(0);
+            *val += 1;
+            first_index.entry(cell.as_string()).or_insert(i);
+            if *val > most {
+                most = *val;
+                top = cell;
+            }
+        });
+        Some((
+            top.clone(),                                        // top val
+            freq.len() as f64,                                  // unique
+            *first_index.get(&top.as_string()).unwrap() as f64, // top val idx
+            most as f64,                                        // top count
+        ))
+    }
+    pub fn unique(&self) -> usize {
+        self.values
+            .iter()
+            .map(|cell| cell.as_string())
+            .collect::<HashSet<String>>()
+            .len()
+    }
+    pub fn coalesce(&self) -> Option<&Cell> {
+        self.values.iter().find(|cell| !cell.is_null())
+    }
+    pub fn non_null(&self) -> usize {
+        self.values.iter().map(|cell| !cell.is_null()).count()
+    }
 }
 
 fn null_float() -> Cell {
