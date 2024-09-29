@@ -115,7 +115,7 @@ impl<'a> DataGroup<'a> {
         });
         self
     }
-    pub fn collect(self) -> Result<Dataframe, Error> {
+    pub fn to_dataframe(self) -> Result<Dataframe, Error> {
         let rd_router = ReduceRouter::new();
         let name_indices = self
             .slice

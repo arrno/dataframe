@@ -2,6 +2,7 @@ pub use crate::{
     cell::*,
     column::*,
     expression::{Op::*, *},
+    group::Reducer::*,
     row,
     row::*,
     sort::*,
@@ -163,7 +164,15 @@ impl Dataframe {
         wtr.flush()?;
         Ok(())
     }
-
+    pub fn rename_col(&mut self, from: &str, to: &str) -> bool {
+        match self.columns.iter_mut().find(|col| col.name() == from) {
+            Some(col) => {
+                col.rename(to.to_string());
+                true
+            }
+            None => false,
+        }
+    }
     pub fn col_mut(&mut self, name: &str) -> Option<&mut Vec<Cell>> {
         self.columns
             .iter_mut()

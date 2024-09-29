@@ -43,6 +43,9 @@ impl Col {
     pub fn name(&self) -> &str {
         &self.name
     }
+    pub fn rename(&mut self, new_name: String) {
+        self.name = new_name
+    }
     pub fn typed(&self) -> &Cell {
         &self.typed
     }
@@ -206,11 +209,15 @@ impl Col {
     pub fn mean(&self) -> Option<f64> {
         match self.typed.is_num() {
             true => Some(
-                self.values
+                (self
+                    .values
                     .iter()
                     .map(|cell| cell.to_float_val())
                     .sum::<f64>()
-                    / self.values.len() as f64,
+                    / self.values.len() as f64
+                    * 100.0)
+                    .round()
+                    / 100.0,
             ),
             false => None,
         }

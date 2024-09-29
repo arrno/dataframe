@@ -966,3 +966,34 @@ fn describe() {
         .unwrap()
     );
 }
+
+#[test]
+fn group() {
+    // TODO
+    let df = Dataframe::from_rows(
+        vec!["name", "department", "salary", "age"],
+        vec![
+            row!("Jasper", "Sales", 100, 29),
+            row!("James", "Marketing", 200, 44),
+            row!("Susan", "Sales", 300, 65),
+            row!("Jane", "Marketing", 400, 47),
+            row!("Sam", "Sales", 100, 55),
+            row!("Sally", "Engineering", 200, 30),
+        ],
+    )
+    .unwrap();
+    df.to_slice()
+        .chunk_by("department")
+        .unwrap()
+        .iter()
+        .for_each(|chunk| chunk.print());
+    let grouped = df
+        .group_by("department")
+        .select("department", Coalesce)
+        .select("name", Count)
+        .select("salary", Max)
+        .select("age", Mean)
+        .to_dataframe()
+        .unwrap();
+    grouped.print();
+}

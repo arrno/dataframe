@@ -14,18 +14,4 @@ fn main() {
     )
     .unwrap();
     df.print();
-    df.to_slice()
-        .chunk_by("state")
-        .unwrap()
-        .iter()
-        .for_each(|chunk| chunk.print());
-    let grouped = df
-        .group_by("department")
-        .select("department", Coalesce)
-        .select("username", Count)
-        .select("salary", Max)
-        .select("age", Mean)
-        .collect()
-        .unwrap();
-    grouped.print();
 }

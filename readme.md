@@ -17,7 +17,7 @@
 use rowboat::dataframe::*;
 ```
 ## Create
-**Create from rows**
+**From rows**
 
 using the `row!` macro
 ```rust
@@ -31,7 +31,7 @@ let df = Dataframe::from_rows(
 )
 .unwrap();
 ```
-**Create from csv**
+**From csv**
 
 With ToRow proc-macro
 ```rust
@@ -56,7 +56,7 @@ impl ToRow for MyRow {
 }
 ```
 
-**Create from structs**
+**From structs**
 
 Create from a `Vec<T>` where `T` implements `ToRow`
 ```rust
@@ -143,28 +143,31 @@ df.info();
 // Shape: 3_col x 5_row
 // Columns: strangs <Str>, nums <Int>, null nums <Int>
 ```
-**Column names**
-```rust
-df.col_names();
-```
 **Describe**
 ```rust
 df.describe().print();
-// +---------+---------+------+-----------+
-// | ::      | strangs | nums | null nums |
-// +---------+---------+------+-----------+
-// | count   |       5 |    5 |         5 |
-// | mean    |    Null |    2 |    341.75 |
-// | std     |    Null | 1.41 |    301.15 |
-// | min     |    Null |    0 |       -10 |
-// | 25%     |    Null |  0.5 |        95 |
-// | 50%     |    Null |    2 |       300 |
-// | 75%     |    Null |  3.5 |     588.5 |
-// | max     |    Null |    4 |       777 |
-// | unique  |       5 | Null |      Null |
-// | top idx |       0 | Null |      Null |
-// | freq    |       1 | Null |      Null |
-// +---------+---------+------+-----------+
+```
+Creates a describe df and prints it:
+```
++---------+---------+------+-----------+
+| ::      | strangs | nums | null nums |
++---------+---------+------+-----------+
+| count   |       5 |    5 |         5 |
+| mean    |    Null |    2 |    341.75 |
+| std     |    Null | 1.41 |    301.15 |
+| min     |    Null |    0 |       -10 |
+| 25%     |    Null |  0.5 |        95 |
+| 50%     |    Null |    2 |       300 |
+| 75%     |    Null |  3.5 |     588.5 |
+| max     |    Null |    4 |       777 |
+| unique  |       5 | Null |      Null |
+| top idx |       0 | Null |      Null |
+| freq    |       1 | Null |      Null |
++---------+---------+------+-----------+
+```
+**Column names**
+```rust
+df.col_names();
 ```
 ## Extend
 **Add column**
@@ -227,7 +230,7 @@ let result_df = df
 
 **More on columns**
 
-Copy/update an existing column into a new column.
+Copy/update an existing column into a new column
 ```rust
 df.add_col(
     "age is even",
@@ -244,7 +247,7 @@ df.add_col(
 .unwrap();
 ```
 
-Create a column derived from multiple source column values.
+Create a column derived from multiple source column values
 ```rust
 df.add_col(
     "id and age odd",
@@ -287,15 +290,25 @@ let cell = df.cell(1, "score").unwrap();
 ## Reshape
 **Drop columns**
 
-Drop specified columns.
+Drop specified columns
 ```rust
 df.drop_cols(["name", "registered"].into());
 ```
 **Retain columns**
 
-Drop all columns other than those specified.
+Drop all columns other than those specified
 ```rust
 df.retain_cols(["name", "registered"].into());
+```
+
+**Rename column**
+```rust
+// returns true if successful
+if df.rename_col("strangs", "Strings") {
+    println!("Success!");
+} else {
+    println!("Column not found.")
+}
 ```
 
 ## Filter
@@ -379,11 +392,72 @@ let unames = df
 ```
 **Into iter**
 
-A consuming `df.into_iter()` is also available.
+A consuming `df.into_iter()` is also available
 
 **Iter chunk**
 ```rust
 df.iter_chunk(2).for_each(|chunk| chunk.print());
+```
+## Group by
+**Reducer enum variants**
+
+`Variant` : "Displayed as"
+- `Count` : "c"
+- `Sum` : "+"
+- `Prod` : "*"
+- `Mean` : "m"
+- `Min` : "_"
+- `Max` : "^"
+- `Top` : "t"
+- `Unique` : "u"
+- `Coalesce` : "&"
+- `NonNull` : "!"
+
+**Query**
+
+Group df by common `group_by` values then do selects to reduce data groups into a new dataframe
+```rust
+let grouped_df = df
+    .group_by("department")
+    .select("department", Coalesce) // easiest way to get grouped col
+    .select("name", Count)
+    .select("salary", Max)
+    .select("age", Mean)
+    .to_dataframe()
+    .unwrap();
+```
+Above query transforms this raw data:
+```
++--------+-------------+--------+-----+
+| name   | department  | salary | age |
++--------+-------------+--------+-----+
+| Jasper | Sales       |    100 |  29 |
+| James  | Marketing   |    200 |  44 |
+| Susan  | Sales       |    300 |  65 |
+| Jane   | Marketing   |    400 |  47 |
+| Sam    | Sales       |    100 |  55 |
+| Sally  | Engineering |    200 |  30 |
++--------+-------------+--------+-----+
+```
+Into this new dataframe:
+```
++---------------+---------+-----------+--------+
+| &\ department | c\ name | ^\ salary | m\ age |
++---------------+---------+-----------+--------+
+| Sales         |       3 |       300 |  49.67 |
+| Marketing     |       2 |       400 |   45.5 |
+| Engineering   |       1 |       200 |     30 |
++---------------+---------+-----------+--------+
+```
+**Grouped chunks**
+
+Group df by common `chunk_by` values into a `Vec<Dataframe>`
+```rust
+df.to_slice()
+    .chunk_by("State")
+    .unwrap()
+    .iter()
+    .for_each(|chunk| chunk.print());
 ```
 ## Store
 **To csv**
