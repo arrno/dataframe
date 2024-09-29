@@ -113,7 +113,7 @@ impl<'a> DataGroup<'a> {
         Ok(())
     }
     pub fn collect(self) -> Dataframe {
-        let red_rout = ReduceRouter::new();
+        let rd_router = ReduceRouter::new();
         let name_indices = self
             .dataslice
             .columns()
@@ -130,13 +130,13 @@ impl<'a> DataGroup<'a> {
                 .chunk_by(&self.by)
                 .unwrap()
                 .iter()
-                .map(|(_, df)| {
+                .map(|df| {
                     self.selects
                         .iter()
                         .map(|select| {
                             let col = &df.columns()
                                 [*name_indices.get(select.column_name.as_str()).unwrap()];
-                            red_rout.0.get(&select.reducer).unwrap()(col)
+                            rd_router.0.get(&select.reducer).unwrap()(col)
                         })
                         .collect::<Vec<Cell>>()
                 })

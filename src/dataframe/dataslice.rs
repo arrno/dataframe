@@ -98,8 +98,9 @@ impl<'a> DataSlice<'a> {
         iterrows::Iterrows::new(self)
     }
 
-    pub fn chunk_by(&self, by: &str) -> Result<HashMap<String, Dataframe>, Error> {
-        let mut chunks: HashMap<String, Vec<Vec<Cell>>> = HashMap::new();
+    pub fn chunk_by(&self, by: &str) -> Result<Vec<Dataframe>, Error> {
+        let mut chunks_idx: HashMap<String, usize> = HashMap::new();
+        let mut chunks: Vec<Vec<Vec<Cell>>> = vec![];
         let by_idx = match self
             .columns
             .iter()
@@ -111,17 +112,23 @@ impl<'a> DataSlice<'a> {
             None => return Err(Error::new("Group by col not found".to_string())),
         };
         (0..self.length()).for_each(|i| {
-            let chunk = chunks
-                .entry(
-                    self.columns
-                        .get(by_idx)
-                        .unwrap()
-                        .values()
-                        .get(i)
-                        .unwrap()
-                        .as_string(),
-                )
-                .or_insert(self.columns.iter().map(|_| vec![]).collect());
+            let key = self
+                .columns
+                .get(by_idx)
+                .unwrap()
+                .values()
+                .get(i)
+                .unwrap()
+                .as_string();
+            let chunk_idx = match chunks_idx.get(&key) {
+                Some(i) => *i,
+                None => {
+                    chunks.push(self.columns.iter().map(|_| vec![]).collect());
+                    chunks_idx.insert(key, chunks.len() - 1);
+                    chunks.len() - 1
+                }
+            };
+            let chunk = chunks.get_mut(chunk_idx).unwrap();
             self.columns
                 .iter()
                 .enumerate()
@@ -129,25 +136,22 @@ impl<'a> DataSlice<'a> {
         });
         Ok(chunks
             .into_iter()
-            .map(|(key, df_cols)| {
-                (
-                    key,
-                    Dataframe::new(None)
-                        .set_columns(
-                            df_cols
-                                .into_iter()
-                                .enumerate()
-                                .map(|(i, values)| {
-                                    Col::build(
-                                        self.columns[i].name().to_string(),
-                                        values,
-                                        self.columns[i].typed().clone(),
-                                    )
-                                })
-                                .collect(),
-                        )
-                        .unwrap(),
-                )
+            .map(|df_cols| {
+                Dataframe::new(None)
+                    .set_columns(
+                        df_cols
+                            .into_iter()
+                            .enumerate()
+                            .map(|(i, values)| {
+                                Col::build(
+                                    self.columns[i].name().to_string(),
+                                    values,
+                                    self.columns[i].typed().clone(),
+                                )
+                            })
+                            .collect(),
+                    )
+                    .unwrap()
             })
             .collect())
     }
