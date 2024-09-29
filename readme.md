@@ -299,20 +299,20 @@ df.retain_cols(["name", "registered"].into());
 ```
 
 ## Filter
-Supported operations:
-- `eq()` equal
-- `neq()` not equal
-- `gt()` greater than
-- `lt()` less than
-- `gte()` greater or equal than
-- `lte()` less or equal than
-- `modl(i: i64)` mod `i` is
-- `regx()` matches regex
+Operation enum variants:
+- `Eq` equal
+- `Neq` not equal
+- `Gt` greater than
+- `Lt` less than
+- `GtEq` greater or equal than
+- `LtEq` less or equal than
+- `Mod(i64)` mod `i` is
+- `Regex` matches regex
 
 **Simple**
 ```rust
 // where age val is not null
-let df = df.filter(exp("age", neq(), None::<i64>)).unwrap();
+let df = df.filter(exp("age", Neq, None::<i64>)).unwrap();
 ```
 **Complex**
 
@@ -320,8 +320,8 @@ Nest as many and/or/not/exp as needed
 ```rust
 let df = df
     .filter(or(vec![
-        and(vec![exp("id", gt(), 2), exp("score", lt(), 1000)]),
-        exp("val", eq(), false),
+        and(vec![exp("id", Gt, 2), exp("score", Lt, 1000)]),
+        exp("val", Eq, false),
     ]))
     .unwrap();
 ```
@@ -331,7 +331,7 @@ let df = df
 Wrap any expression in `not()` to inverse the result
 ```rust
 // filter odd values
-let df = df.filter(not(exp("age", modl(2), 0))).unwrap();
+let df = df.filter(not(exp("age", Mod(2), 0))).unwrap();
 ```
 ## Mutate
 **By column**

@@ -21,12 +21,28 @@ pub enum Reducer {
     Coalesce,
     NonNull,
 }
+impl Reducer {
+    pub fn display(&self) -> String {
+        match self {
+            Self::Count => "c".to_string(),
+            Self::Sum => "+".to_string(),
+            Self::Prod => "*".to_string(),
+            Self::Mean => "m".to_string(),
+            Self::Min => "_".to_string(),
+            Self::Max => "^".to_string(),
+            Self::Top => "t".to_string(),
+            Self::Unique => "u".to_string(),
+            Self::Coalesce => "&".to_string(),
+            Self::NonNull => "!".to_string(),
+        }
+    }
+}
 struct Select {
     column_name: String,
     reducer: Reducer,
 }
 pub struct DataGroup<'a> {
-    dataslice: DataSlice<'a>,
+    slice: DataSlice<'a>,
     by: String,
     selects: Vec<Select>,
 }
@@ -68,7 +84,7 @@ fn non_null(col: &Col) -> Cell {
 }
 
 impl ReduceRouter {
-    pub fn new() -> ReduceRouter {
+    fn new() -> ReduceRouter {
         let mut map = HashMap::new();
         map.insert(Reducer::Count, count as fn(&Col) -> cell::Cell);
         map.insert(Reducer::Sum, sum as fn(&Col) -> cell::Cell);
@@ -85,63 +101,50 @@ impl ReduceRouter {
 }
 
 impl<'a> DataGroup<'a> {
-    pub fn new(df: DataSlice<'a>, by: String) -> Result<Self, Error> {
-        match df.columns().iter().find(|col| col.name() == by) {
-            Some(_) => Ok(DataGroup {
-                dataslice: df,
-                by: by,
-                selects: vec![],
-            }),
-            None => Err(Error::new("Groupby column not found".to_string())),
+    pub fn new(df: DataSlice<'a>, by: String) -> Self {
+        DataGroup {
+            slice: df,
+            by: by,
+            selects: vec![],
         }
     }
-    pub fn select(&'a mut self, column: &str, reducer: Reducer) -> Result<(), Error> {
-        let select = match self
-            .dataslice
-            .columns()
-            .iter()
-            .map(|col| col.name())
-            .find(|name| name == &column)
-        {
-            Some(name) => Select {
-                column_name: name.to_string(),
-                reducer: reducer,
-            },
-            None => return Err(Error::new("Column not found".to_string())),
-        };
-        self.selects.push(select);
-        Ok(())
+    pub fn select(mut self, column: &str, reducer: Reducer) -> Self {
+        self.selects.push(Select {
+            column_name: column.to_string(),
+            reducer: reducer,
+        });
+        self
     }
-    pub fn collect(self) -> Dataframe {
+    pub fn collect(self) -> Result<Dataframe, Error> {
         let rd_router = ReduceRouter::new();
         let name_indices = self
-            .dataslice
+            .slice
             .columns()
             .iter()
             .enumerate()
             .map(|(i, col)| (col.name(), i))
             .collect::<HashMap<&str, usize>>();
-        Dataframe::from_rows(
+        Dataframe::from_string_rows(
             self.selects
                 .iter()
-                .map(|s| s.column_name.as_str())
+                .map(|s| format!("{}\\ {}", s.reducer.display(), s.column_name.as_str()))
                 .collect(),
-            self.dataslice
-                .chunk_by(&self.by)
-                .unwrap()
+            self.slice
+                .chunk_by(&self.by)?
                 .iter()
                 .map(|df| {
                     self.selects
                         .iter()
                         .map(|select| {
-                            let col = &df.columns()
-                                [*name_indices.get(select.column_name.as_str()).unwrap()];
-                            rd_router.0.get(&select.reducer).unwrap()(col)
+                            if let Some(idx) = name_indices.get(select.column_name.as_str()) {
+                                rd_router.0.get(&select.reducer).unwrap()(&df.columns()[*idx])
+                            } else {
+                                Cell::Null(Box::new(Cell::Float(0.0)))
+                            }
                         })
                         .collect::<Vec<Cell>>()
                 })
                 .collect::<Vec<Vec<Cell>>>(),
         )
-        .unwrap()
     }
 }

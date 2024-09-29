@@ -152,8 +152,8 @@ fn filter_dataframe() {
     // complex expressions
     let df = generic_dataframe()
         .filter(or(vec![
-            and(vec![exp("id", gt(), 2), exp("score", lt(), 1000)]),
-            exp("registered", eq(), false),
+            and(vec![exp("id", Gt, 2), exp("score", Lt, 1000)]),
+            exp("registered", Eq, false),
         ]))
         .unwrap();
     let expected_df = Dataframe::from_rows(
@@ -169,7 +169,7 @@ fn filter_dataframe() {
 
     // multi filter same col
     let df = generic_dataframe()
-        .filter(and(vec![exp("id", gt(), 2), exp("id", lt(), 4)]))
+        .filter(and(vec![exp("id", Gt, 2), exp("id", Lt, 4)]))
         .unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],
@@ -179,7 +179,7 @@ fn filter_dataframe() {
     assert_eq!(df, expected_df);
 
     // mod
-    let df = generic_dataframe().filter(exp("id", modl(2), 0)).unwrap();
+    let df = generic_dataframe().filter(exp("id", Mod(2), 0)).unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],
         vec![
@@ -191,7 +191,7 @@ fn filter_dataframe() {
     assert_eq!(df, expected_df);
 
     let df = generic_dataframe()
-        .filter(not(exp("id", modl(2), 0)))
+        .filter(not(exp("id", Mod(2), 0)))
         .unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],
@@ -206,7 +206,7 @@ fn filter_dataframe() {
 
     // regex
     let df = generic_dataframe()
-        .filter(exp("name", regx(), "^J"))
+        .filter(exp("name", Regex, "^J"))
         .unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],

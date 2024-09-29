@@ -1,24 +1,26 @@
+pub use crate::{
+    cell::*,
+    column::*,
+    expression::{Op::*, *},
+    row,
+    row::*,
+    sort::*,
+    util::Error,
+};
+use crate::{
+    dataslice::*,
+    group::DataGroup,
+    iterrows::{self, *},
+};
 use csv::Writer;
-use serde::Deserialize;
-use std::error::Error as StdError;
-use std::fs::File;
-
-pub use crate::cell::*;
-pub use crate::column::*;
-use crate::dataslice::*;
-pub use crate::expression::*;
-use crate::group::DataGroup;
-use crate::iterrows;
-use crate::iterrows::*;
-pub use crate::row;
-pub use crate::row::*;
-pub use crate::sort::*;
-use crate::util::Error;
 pub use dataframe_macros::ToRow;
-use std::cmp::Ordering;
-use std::cmp::{max, min};
-use std::collections::HashMap;
-use std::collections::HashSet;
+use serde::Deserialize;
+use std::{
+    cmp::{max, min, Ordering},
+    collections::{HashMap, HashSet},
+    error::Error as StdError,
+    fs::File,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct Dataframe {
@@ -73,8 +75,13 @@ impl Dataframe {
         }
         Ok(df)
     }
-
+    pub fn from_string_rows(labels: Vec<String>, rows: Vec<Vec<Cell>>) -> Result<Self, Error> {
+        Self::do_from_rows(labels, rows)
+    }
     pub fn from_rows(labels: Vec<&str>, rows: Vec<Vec<Cell>>) -> Result<Self, Error> {
+        Self::do_from_rows(labels.iter().map(|l| l.to_string()).collect(), rows)
+    }
+    fn do_from_rows(mut labels: Vec<String>, rows: Vec<Vec<Cell>>) -> Result<Self, Error> {
         let mut df = Self::new(None);
         if rows.len() == 0 {
             return Ok(df);
@@ -90,8 +97,9 @@ impl Dataframe {
                     .for_each(|(i, cell)| cols[i].push(cell))
             }
         }
-        for (i, col) in cols.into_iter().enumerate() {
-            df.add_cell_col(labels[i].to_string(), col)?;
+        labels.reverse();
+        for col in cols.into_iter() {
+            df.add_cell_col(labels.pop().unwrap(), col)?;
         }
         Ok(df)
     }
@@ -604,7 +612,7 @@ impl Dataframe {
         df.set_columns(cols).unwrap()
     }
 
-    pub fn group_by(&self, by: String) -> Result<DataGroup, Error> {
-        DataGroup::new(self.to_slice(), by)
+    pub fn group_by(&self, by: &str) -> DataGroup {
+        DataGroup::new(self.to_slice(), by.to_string())
     }
 }

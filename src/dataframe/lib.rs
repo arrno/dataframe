@@ -4,7 +4,7 @@ pub mod dataframe;
 mod dataslice;
 pub mod expression;
 mod format;
-mod group;
+pub mod group;
 mod iterrows;
 mod join;
 pub mod row;
