@@ -401,28 +401,29 @@ df.iter_chunk(2).for_each(|chunk| chunk.print());
 ## Group by
 **Reducer enum variants**
 
-`Variant` : "Displayed as"
-- `Count` : "c"
-- `Sum` : "+"
-- `Prod` : "*"
-- `Mean` : "m"
-- `Min` : "_"
-- `Max` : "^"
-- `Top` : "t"
-- `Unique` : "u"
-- `Coalesce` : "&"
-- `NonNull` : "!"
+- `Count`
+- `Sum`
+- `Prod`
+- `Mean`
+- `Min`
+- `Max`
+- `Top`
+- `Unique`
+- `Coalesce`
+- `NonNull`
 
 **Query**
 
 Group df by common `group_by` values then do selects to reduce data groups into a new dataframe
 ```rust
+// Source column, reducer, new alias name
 let grouped_df = df
     .group_by("department")
-    .select("department", Coalesce) // easiest way to get grouped col
-    .select("name", Count)
-    .select("salary", Max)
-    .select("age", Mean)
+    .select("department", Coalesce, "department")
+    .select("name", Count, "count")
+    .select("salary", Max, "max sal")
+    .select("salary", Min, "min sal")
+    .select("age", Mean, "avg age")
     .to_dataframe()
     .unwrap();
 ```
@@ -441,13 +442,13 @@ Above query transforms this raw data:
 ```
 Into this new dataframe:
 ```
-+---------------+---------+-----------+--------+
-| &\ department | c\ name | ^\ salary | m\ age |
-+---------------+---------+-----------+--------+
-| Sales         |       3 |       300 |  49.67 |
-| Marketing     |       2 |       400 |   45.5 |
-| Engineering   |       1 |       200 |     30 |
-+---------------+---------+-----------+--------+
++-------------+-------+---------+---------+---------+
+| department  | count | max sal | min sal | avg age |
++-------------+-------+---------+---------+---------+
+| Sales       |     3 |     300 |     100 |   49.67 |
+| Marketing   |     2 |     400 |     200 |    45.5 |
+| Engineering |     1 |     200 |     200 |      30 |
++-------------+-------+---------+---------+---------+
 ```
 **Grouped chunks**
 

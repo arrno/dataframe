@@ -21,22 +21,6 @@ pub enum Reducer {
     Coalesce,
     NonNull,
 }
-impl Reducer {
-    pub fn display(&self) -> String {
-        match self {
-            Self::Count => "c".to_string(),
-            Self::Sum => "+".to_string(),
-            Self::Prod => "*".to_string(),
-            Self::Mean => "m".to_string(),
-            Self::Min => "_".to_string(),
-            Self::Max => "^".to_string(),
-            Self::Top => "t".to_string(),
-            Self::Unique => "u".to_string(),
-            Self::Coalesce => "&".to_string(),
-            Self::NonNull => "!".to_string(),
-        }
-    }
-}
 struct Select {
     column_name: String,
     reducer: Reducer,
@@ -45,6 +29,7 @@ pub struct DataGroup<'a> {
     slice: DataSlice<'a>,
     by: String,
     selects: Vec<Select>,
+    aliases: Vec<String>,
 }
 
 struct ReduceRouter(HashMap<Reducer, fn(&Col) -> cell::Cell>);
@@ -106,13 +91,23 @@ impl<'a> DataGroup<'a> {
             slice: df,
             by: by,
             selects: vec![],
+            aliases: vec![],
         }
     }
-    pub fn select(mut self, column: &str, reducer: Reducer) -> Self {
+    pub fn select(mut self, column: &str, reducer: Reducer, to_name: &str) -> Self {
         self.selects.push(Select {
             column_name: column.to_string(),
             reducer: reducer,
         });
+        self.aliases.push(to_name.to_string());
+        self
+    }
+    pub fn select_strings(mut self, column: String, reducer: Reducer, to_name: String) -> Self {
+        self.selects.push(Select {
+            column_name: column,
+            reducer: reducer,
+        });
+        self.aliases.push(to_name);
         self
     }
     pub fn to_dataframe(self) -> Result<Dataframe, Error> {
@@ -125,10 +120,7 @@ impl<'a> DataGroup<'a> {
             .map(|(i, col)| (col.name(), i))
             .collect::<HashMap<&str, usize>>();
         Dataframe::from_string_rows(
-            self.selects
-                .iter()
-                .map(|s| format!("{}\\ {}", s.reducer.display(), s.column_name.as_str()))
-                .collect(),
+            self.aliases,
             self.slice
                 .chunk_by(&self.by)?
                 .iter()

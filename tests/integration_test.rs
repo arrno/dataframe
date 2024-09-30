@@ -1021,23 +1021,22 @@ fn group() {
         });
     let grouped = df
         .group_by("department")
-        .select("department", Coalesce)
-        .select("name", Count)
-        .select("salary", Max)
-        .select("salary", Min)
-        .select("age", Mean)
+        .select("department", Coalesce, "department")
+        .select("name", Count, "count")
+        .select("salary", Max, "max salary")
+        .select("salary", Min, "min salary")
+        .select("age", Mean, "average age")
         .to_dataframe()
         .unwrap();
-
     assert_eq!(
         grouped,
         Dataframe::from_rows(
             vec![
-                "&\\ department",
-                "c\\ name",
-                "^\\ salary",
-                "_\\ salary",
-                "m\\ age"
+                "department",
+                "count",
+                "max salary",
+                "min salary",
+                "average age"
             ],
             vec![
                 row!("Sales", 3 as u32, 300.0, 100.0, 49.67),
