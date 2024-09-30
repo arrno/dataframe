@@ -969,7 +969,6 @@ fn describe() {
 
 #[test]
 fn group() {
-    // TODO
     let df = Dataframe::from_rows(
         vec!["name", "department", "salary", "age"],
         vec![
@@ -985,15 +984,72 @@ fn group() {
     df.to_slice()
         .chunk_by("department")
         .unwrap()
-        .iter()
-        .for_each(|chunk| chunk.print());
+        .into_iter()
+        .enumerate()
+        .for_each(|(i, chunk)| match i {
+            0 => assert_eq!(
+                chunk,
+                Dataframe::from_rows(
+                    vec!["name", "department", "salary", "age"],
+                    vec![
+                        row!("Jasper", "Sales", 100, 29),
+                        row!("Susan", "Sales", 300, 65),
+                        row!("Sam", "Sales", 100, 55),
+                    ],
+                )
+                .unwrap()
+            ),
+            1 => assert_eq!(
+                chunk,
+                Dataframe::from_rows(
+                    vec!["name", "department", "salary", "age"],
+                    vec![
+                        row!("James", "Marketing", 200, 44),
+                        row!("Jane", "Marketing", 400, 47),
+                    ],
+                )
+                .unwrap()
+            ),
+            _ => assert_eq!(
+                chunk,
+                Dataframe::from_rows(
+                    vec!["name", "department", "salary", "age"],
+                    vec![row!("Sally", "Engineering", 200, 30),],
+                )
+                .unwrap()
+            ),
+        });
     let grouped = df
         .group_by("department")
         .select("department", Coalesce)
         .select("name", Count)
         .select("salary", Max)
+        .select("salary", Min)
         .select("age", Mean)
         .to_dataframe()
         .unwrap();
-    grouped.print();
+
+    assert_eq!(
+        grouped,
+        Dataframe::from_rows(
+            vec![
+                "&\\ department",
+                "c\\ name",
+                "^\\ salary",
+                "_\\ salary",
+                "m\\ age"
+            ],
+            vec![
+                row!("Sales", 3 as u32, 300.0, 100.0, 49.67),
+                row!("Marketing", 2 as u32, 400.0, 200.0, 45.5),
+                row!("Engineering", 1 as u32, 200.0, 200.0, 30.0),
+            ],
+        )
+        .unwrap()
+    )
+}
+
+#[test]
+fn mismatched_types() {
+    // TODO from rows/ from csv with mismatching types
 }

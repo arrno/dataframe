@@ -1,5 +1,4 @@
 use rowboat::dataframe::*;
-use rowboat::group::Reducer::*;
 
 fn main() {
     let df = Dataframe::from_rows(
