@@ -58,6 +58,11 @@ impl Dataframe {
         if rows.len() == 0 {
             return Ok(df);
         }
+        let type_checks: Vec<fn(&Cell) -> bool> = rows[0]
+            .to_row()
+            .iter()
+            .map(|cell| cell_to_type_check(cell))
+            .collect();
         let labels = rows[0].labels();
         let mut cols: Vec<Vec<Cell>> = labels.iter().map(|_| vec![]).collect();
         for row in rows.into_iter() {
@@ -65,10 +70,12 @@ impl Dataframe {
             if cells.len() != labels.len() {
                 return Err(Error::new("Inconsistent data shape".to_string()));
             } else {
-                cells
-                    .into_iter()
-                    .enumerate()
-                    .for_each(|(i, cell)| cols[i].push(cell))
+                for (i, cell) in cells.into_iter().enumerate() {
+                    if !type_checks[i](&cell) {
+                        return Err(Error::new("Inconsistent col types".to_string()));
+                    }
+                    cols[i].push(cell)
+                }
             }
         }
         for (i, col) in cols.into_iter().enumerate() {
@@ -76,13 +83,22 @@ impl Dataframe {
         }
         Ok(df)
     }
+
     pub fn from_string_rows(labels: Vec<String>, rows: Vec<Vec<Cell>>) -> Result<Self, Error> {
         Self::do_from_rows(labels, rows)
     }
     pub fn from_rows(labels: Vec<&str>, rows: Vec<Vec<Cell>>) -> Result<Self, Error> {
         Self::do_from_rows(labels.iter().map(|l| l.to_string()).collect(), rows)
     }
+
     fn do_from_rows(mut labels: Vec<String>, rows: Vec<Vec<Cell>>) -> Result<Self, Error> {
+        let mut type_checks: Vec<fn(&Cell) -> bool> = vec![];
+        if rows.len() > 0 {
+            type_checks = rows[0]
+                .iter()
+                .map(|cell| cell_to_type_check(cell))
+                .collect();
+        }
         let mut df = Self::new(None);
         if rows.len() == 0 {
             return Ok(df);
@@ -92,10 +108,12 @@ impl Dataframe {
             if cells.len() != labels.len() {
                 return Err(Error::new("Inconsistent data shape".to_string()));
             } else {
-                cells
-                    .into_iter()
-                    .enumerate()
-                    .for_each(|(i, cell)| cols[i].push(cell))
+                for (i, cell) in cells.into_iter().enumerate() {
+                    if !type_checks[i](&cell) {
+                        return Err(Error::new("Inconsistent col types".to_string()));
+                    }
+                    cols[i].push(cell);
+                }
             }
         }
         labels.reverse();
@@ -104,6 +122,7 @@ impl Dataframe {
         }
         Ok(df)
     }
+
     pub fn to_rows(self) -> (Vec<String>, Vec<Vec<Cell>>) {
         let mut results: Vec<Vec<Cell>> = (0..self.length()).map(|_| vec![]).collect();
         let names = self
@@ -209,7 +228,7 @@ impl Dataframe {
             .collect()
     }
 
-    pub fn set_columns(mut self, cols: Vec<Col>) -> Result<Self, Error> {
+    fn set_columns(mut self, cols: Vec<Col>) -> Result<Self, Error> {
         if cols.len() > 0 {
             let l = cols[0].values().len();
             match cols.iter().find(|c| c.values().len() != l) {
@@ -238,7 +257,7 @@ impl Dataframe {
         Ok(())
     }
 
-    pub fn add_cell_col(&mut self, name: String, set: Vec<Cell>) -> Result<(), Error> {
+    fn add_cell_col(&mut self, name: String, set: Vec<Cell>) -> Result<(), Error> {
         let l = self.length();
         if l != 0 && l != set.len() {
             return Err(Error::new("Invalid col length".to_string()));
@@ -623,5 +642,83 @@ impl Dataframe {
 
     pub fn group_by(&self, by: &str) -> DataGroup {
         DataGroup::new(self.to_slice(), by.to_string())
+    }
+}
+
+// Moving these functions into dataframe module so as to not expose `set_columns`
+impl<'a> DataSlice<'a> {
+    pub fn to_dataframe(&self) -> Dataframe {
+        Dataframe::new(Some(self.title()))
+            .set_columns(
+                self.columns()
+                    .iter()
+                    .map(|col| {
+                        Col::build(
+                            col.name().to_string(),
+                            col.values().iter().map(|val| val.clone()).collect(),
+                            col.typed().clone(),
+                        )
+                    })
+                    .collect(),
+            )
+            .unwrap()
+    }
+
+    pub fn chunk_by(&self, by: &str) -> Result<Vec<Dataframe>, Error> {
+        let mut chunks_idx: HashMap<String, usize> = HashMap::new();
+        let mut chunks: Vec<Vec<Vec<Cell>>> = vec![];
+        let by_idx = match self
+            .columns()
+            .iter()
+            .enumerate()
+            .find(|(_, c)| c.name() == by)
+            .map(|(i, _)| i)
+        {
+            Some(v) => v,
+            None => return Err(Error::new("Group by col not found".to_string())),
+        };
+        (0..self.length()).for_each(|i| {
+            let key = self
+                .columns()
+                .get(by_idx)
+                .unwrap()
+                .values()
+                .get(i)
+                .unwrap()
+                .as_string();
+            let chunk_idx = match chunks_idx.get(&key) {
+                Some(i) => *i,
+                None => {
+                    chunks.push(self.columns().iter().map(|_| vec![]).collect());
+                    chunks_idx.insert(key, chunks.len() - 1);
+                    chunks.len() - 1
+                }
+            };
+            let chunk = chunks.get_mut(chunk_idx).unwrap();
+            self.columns()
+                .iter()
+                .enumerate()
+                .for_each(|(j, col)| chunk.get_mut(j).unwrap().push(col.values()[i].clone()));
+        });
+        Ok(chunks
+            .into_iter()
+            .map(|df_cols| {
+                Dataframe::new(None)
+                    .set_columns(
+                        df_cols
+                            .into_iter()
+                            .enumerate()
+                            .map(|(i, values)| {
+                                Col::build(
+                                    self.columns()[i].name().to_string(),
+                                    values,
+                                    self.columns()[i].typed().clone(),
+                                )
+                            })
+                            .collect(),
+                    )
+                    .unwrap()
+            })
+            .collect())
     }
 }

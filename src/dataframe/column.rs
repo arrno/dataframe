@@ -70,17 +70,17 @@ impl Col {
         }
         let (_, unique, first_index, most) = self.top().unwrap();
         self.describe_with(vec![
-            Cell::Float(self.values.len() as f64),
-            null_float(),
-            null_float(),
-            null_float(),
-            null_float(),
-            null_float(),
-            null_float(),
-            null_float(),
-            Cell::Float(unique),
-            Cell::Float(first_index),
-            Cell::Float(most),
+            Some(self.values.len() as f64),
+            None::<f64>,
+            None::<f64>,
+            None::<f64>,
+            None::<f64>,
+            None::<f64>,
+            None::<f64>,
+            None::<f64>,
+            Some(unique),
+            Some(first_index),
+            Some(most),
         ])
     }
 
@@ -107,11 +107,7 @@ impl Col {
         let min = &sorted_set[0];
         let max = &sorted_set[sorted_set.len() - 1];
         let mean = match total.div_float(sorted_set.len() as f64).unwrap() {
-            Cell::Float(val) => Cell::Float((val * 100.0).round() / 100.0),
-            _ => null_float(),
-        };
-        let mean_f = match mean {
-            Cell::Float(m) => m,
+            Cell::Float(val) => (val * 100.0).round() / 100.0,
             _ => 0.0,
         };
         let sum_sqred_diffs: f64 = self
@@ -123,71 +119,62 @@ impl Col {
                     Cell::Uint(val) => *val as f64,
                     Cell::Float(val) => *val,
                     _ => 0.0,
-                } - mean_f)
+                } - mean)
                     .powi(2)
             })
             .sum();
         let std = match sorted_set.len() {
-            1 => null_float(),
-            _ => Cell::Float(
-                ((sum_sqred_diffs / self.values.len() as f64).sqrt() * 100.0).round() / 100.0,
-            ),
+            1 => None::<f64>,
+            _ => {
+                Some(((sum_sqred_diffs / self.values.len() as f64).sqrt() * 100.0).round() / 100.0)
+            }
         };
         let (quart, med, sev_fifth) = match quartiles(&sorted_set) {
-            Some((quart, med, sev_fifth)) => (quart, med, sev_fifth),
-            None => (null_float(), null_float(), null_float()),
+            Some((quart, med, sev_fifth)) => (Some(quart), Some(med), Some(sev_fifth)),
+            None => (None::<f64>, None::<f64>, None::<f64>),
         };
         self.describe_with(vec![
-            Cell::Float(self.values.len() as f64),
-            mean,
+            Some(self.values.len() as f64),
+            Some(mean),
             std,
-            min.to_float(),
+            Some(min.to_float_val()),
             quart,
             med,
             sev_fifth,
-            max.to_float(),
-            null_float(),
-            null_float(),
-            null_float(),
+            Some(max.to_float_val()),
+            None::<f64>,
+            None::<f64>,
+            None::<f64>,
         ])
     }
 
-    fn describe_with(&self, values: Vec<Cell>) -> Dataframe {
+    fn describe_with(&self, values: Vec<Option<f64>>) -> Dataframe {
         let col = match values.len() {
             0 => vec![
-                Cell::Float(0.0),
-                null_float(),
-                null_float(),
-                null_float(),
-                null_float(),
-                null_float(),
-                null_float(),
-                null_float(),
-                null_float(),
-                null_float(),
-                null_float(),
+                Some(0.0),
+                None::<f64>,
+                None::<f64>,
+                None::<f64>,
+                None::<f64>,
+                None::<f64>,
+                None::<f64>,
+                None::<f64>,
+                None::<f64>,
+                None::<f64>,
+                None::<f64>,
             ],
             _ => values,
         };
         let mut df = Dataframe::new(None);
-        df.add_cell_col(
-            "::".to_string(),
+        df.add_col(
+            "::",
             vec![
-                Cell::Str("count".to_string()),
-                Cell::Str("mean".to_string()),
-                Cell::Str("std".to_string()),
-                Cell::Str("min".to_string()),
-                Cell::Str("25%".to_string()),
-                Cell::Str("50%".to_string()),
-                Cell::Str("75%".to_string()),
-                Cell::Str("max".to_string()),
-                Cell::Str("unique".to_string()),
-                Cell::Str("top idx".to_string()),
-                Cell::Str("freq".to_string()),
+                "count", "mean", "std", "min", "25%", "50%", "75%", "max", "unique", "top idx",
+                "freq",
             ],
         )
         .unwrap();
-        df.add_cell_col(self.name.clone(), col).unwrap();
+        df.add_col(self.name.as_str(), col).unwrap();
         df
     }
 
@@ -281,11 +268,7 @@ impl Col {
     }
 }
 
-fn null_float() -> Cell {
-    Cell::Null(Box::new(Cell::Float(0.0)))
-}
-
-fn median(sorted_set: &[Cell]) -> Option<Cell> {
+fn median(sorted_set: &[Cell]) -> Option<f64> {
     let med_idx = sorted_set.len() as f64 / 2.0;
     let med = if med_idx.floor() == med_idx {
         sorted_set
@@ -295,9 +278,9 @@ fn median(sorted_set: &[Cell]) -> Option<Cell> {
     } else {
         sorted_set.get(med_idx.floor() as usize)?.to_float()
     };
-    Some(med)
+    Some(med.to_float_val())
 }
-fn quartiles(sorted_set: &Vec<Cell>) -> Option<(Cell, Cell, Cell)> {
+fn quartiles(sorted_set: &Vec<Cell>) -> Option<(f64, f64, f64)> {
     match sorted_set.len() {
         0..=3 => None,
         _ => {

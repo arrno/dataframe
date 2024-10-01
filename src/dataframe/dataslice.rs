@@ -19,22 +19,6 @@ impl<'a> DataSlice<'a> {
     pub fn print(&self) {
         TableFormatter::new().print(self);
     }
-    pub fn to_dataframe(&self) -> Dataframe {
-        Dataframe::new(Some(self.title))
-            .set_columns(
-                self.columns
-                    .iter()
-                    .map(|col| {
-                        Col::build(
-                            col.name().to_string(),
-                            col.values().iter().map(|val| val.clone()).collect(),
-                            col.typed().clone(),
-                        )
-                    })
-                    .collect(),
-            )
-            .unwrap()
-    }
     pub fn title(&self) -> &'a str {
         self.title
     }
@@ -97,64 +81,6 @@ impl<'a> DataSlice<'a> {
     pub fn iter(self) -> Iterrows<'a> {
         iterrows::Iterrows::new(self)
     }
-
-    pub fn chunk_by(&self, by: &str) -> Result<Vec<Dataframe>, Error> {
-        let mut chunks_idx: HashMap<String, usize> = HashMap::new();
-        let mut chunks: Vec<Vec<Vec<Cell>>> = vec![];
-        let by_idx = match self
-            .columns
-            .iter()
-            .enumerate()
-            .find(|(_, c)| c.name() == by)
-            .map(|(i, _)| i)
-        {
-            Some(v) => v,
-            None => return Err(Error::new("Group by col not found".to_string())),
-        };
-        (0..self.length()).for_each(|i| {
-            let key = self
-                .columns
-                .get(by_idx)
-                .unwrap()
-                .values()
-                .get(i)
-                .unwrap()
-                .as_string();
-            let chunk_idx = match chunks_idx.get(&key) {
-                Some(i) => *i,
-                None => {
-                    chunks.push(self.columns.iter().map(|_| vec![]).collect());
-                    chunks_idx.insert(key, chunks.len() - 1);
-                    chunks.len() - 1
-                }
-            };
-            let chunk = chunks.get_mut(chunk_idx).unwrap();
-            self.columns
-                .iter()
-                .enumerate()
-                .for_each(|(j, col)| chunk.get_mut(j).unwrap().push(col.values()[i].clone()));
-        });
-        Ok(chunks
-            .into_iter()
-            .map(|df_cols| {
-                Dataframe::new(None)
-                    .set_columns(
-                        df_cols
-                            .into_iter()
-                            .enumerate()
-                            .map(|(i, values)| {
-                                Col::build(
-                                    self.columns[i].name().to_string(),
-                                    values,
-                                    self.columns[i].typed().clone(),
-                                )
-                            })
-                            .collect(),
-                    )
-                    .unwrap()
-            })
-            .collect())
-    }
 }
 
 impl<'a> From<&'a Dataframe> for DataSlice<'a> {
@@ -165,31 +91,3 @@ impl<'a> From<&'a Dataframe> for DataSlice<'a> {
         }
     }
 }
-
-// // TODO
-// #[derive(Debug, PartialEq)]
-// pub struct DataSliceMut<'a> {
-//     title: &'a str,
-//     columns: Vec<ColSliceMut<'a>>,
-//     length: usize,
-// }
-
-// impl<'a> DataSliceMut<'a> {
-//     pub fn new(title: &'a str, columns: Vec<ColSliceMut<'a>>) -> Self {
-//         let length = match columns.get(0) {
-//             Some(col) => col.values().len(),
-//             _ => 0,
-//         };
-//         Self {
-//             title,
-//             columns,
-//             length,
-//         }
-//     }
-//     pub fn length(&self) -> usize {
-//         self.length
-//     }
-//     pub fn columns(&self) -> &Vec<ColSliceMut<'a>> {
-//         &self.columns
-//     }
-// }

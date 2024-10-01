@@ -149,9 +149,9 @@ impl Cell {
     }
     pub fn to_float_val(&self) -> f64 {
         match self {
+            Cell::Float(val) => *val,
             Cell::Int(val) => *val as f64,
             Cell::Uint(val) => *val as f64,
-            Cell::Float(val) => *val,
             _ => 0.0,
         }
     }
@@ -291,4 +291,90 @@ impl ToCell for Timestamp {
                 .unwrap(),
         )
     }
+}
+
+pub fn cell_is_int(cell: &Cell) -> bool {
+    match cell {
+        Cell::Int(_) => true,
+        Cell::Null(inner) => cell_is_int(inner),
+        _ => false,
+    }
+}
+pub fn cell_is_uint(cell: &Cell) -> bool {
+    match cell {
+        Cell::Uint(_) => true,
+        Cell::Null(inner) => cell_is_uint(inner),
+        _ => false,
+    }
+}
+pub fn cell_is_str(cell: &Cell) -> bool {
+    match cell {
+        Cell::Str(_) => true,
+        Cell::Null(inner) => cell_is_str(inner),
+        _ => false,
+    }
+}
+pub fn cell_is_bool(cell: &Cell) -> bool {
+    match cell {
+        Cell::Bool(_) => true,
+        Cell::Null(inner) => cell_is_bool(inner),
+        _ => false,
+    }
+}
+pub fn cell_is_float(cell: &Cell) -> bool {
+    match cell {
+        Cell::Float(_) => true,
+        Cell::Null(inner) => cell_is_float(inner),
+        _ => false,
+    }
+}
+pub fn cell_is_date_time(cell: &Cell) -> bool {
+    match cell {
+        Cell::DateTime(_) => true,
+        Cell::Null(inner) => cell_is_date_time(inner),
+        _ => false,
+    }
+}
+pub fn cell_is_null(cell: &Cell) -> bool {
+    if let Cell::Null(_) = cell {
+        true
+    } else {
+        false
+    }
+}
+
+pub fn cell_to_type_check(cell: &Cell) -> fn(&Cell) -> bool {
+    match cell {
+        Cell::Int(_) => cell_is_int,
+        Cell::Uint(_) => cell_is_uint,
+        Cell::Str(_) => cell_is_str,
+        Cell::Bool(_) => cell_is_bool,
+        Cell::Float(_) => cell_is_float,
+        Cell::DateTime(_) => cell_is_date_time,
+        Cell::Null(inner_cell) => cell_to_type_check(&inner_cell),
+    }
+}
+
+pub fn null_int() -> Cell {
+    Cell::Null(Box::new(Cell::Int(0)))
+}
+pub fn null_uint() -> Cell {
+    Cell::Null(Box::new(Cell::Uint(0)))
+}
+pub fn null_str() -> Cell {
+    Cell::Null(Box::new(Cell::Str("".to_string())))
+}
+pub fn null_bool() -> Cell {
+    Cell::Null(Box::new(Cell::Bool(false)))
+}
+pub fn null_float() -> Cell {
+    Cell::Null(Box::new(Cell::Float(0.0)))
+}
+pub fn null_date() -> Cell {
+    Cell::Null(Box::new(Cell::DateTime(
+        NaiveDate::from_ymd_opt(30, 4, 3)
+            .unwrap()
+            .and_hms_opt(15, 0, 0)
+            .unwrap(),
+    )))
 }

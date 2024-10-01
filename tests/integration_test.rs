@@ -1050,5 +1050,9 @@ fn group() {
 
 #[test]
 fn mismatched_types() {
-    // TODO from rows/ from csv with mismatching types
+    // Not exposed: add_cell_col / set_columns
+    // Type enforced by generic: add_col
+    // Redundant: from_csv uses from_rows
+    // Covered: add_row tested in errors()
+    // TODO: test from_rows + from_struct
 }
