@@ -702,10 +702,6 @@ fn errors() {
         Ok(_) => panic!("Missing col err not detected"),
         Err(err) => assert_eq!(err.to_string(), "Column not found".to_string()),
     }
-    match df.add_row(row!(4, "Sally", 23, 700, "true")) {
-        Ok(_) => panic!("Type err not detected"),
-        Err(err) => assert_eq!(err.to_string(), "Invalid col types".to_string()),
-    }
 }
 
 #[test]
@@ -1048,11 +1044,99 @@ fn group() {
     )
 }
 
+#[derive(Deserialize)]
+struct SneakyType {
+    name: String,
+    age: i64,
+    val: bool,
+}
+impl ToRow for SneakyType {
+    fn to_row(&self) -> Vec<Cell> {
+        if self.age < 40 {
+            vec![self.name.as_str().into(), self.age.into(), self.val.into()]
+        } else {
+            vec![
+                self.name.as_str().into(),
+                self.age.into(),
+                format!("{}", self.val).into(),
+            ]
+        }
+    }
+    fn labels(&self) -> Vec<String> {
+        vec!["name".to_string(), "age".to_string(), "val".to_string()]
+    }
+}
 #[test]
 fn mismatched_types() {
     // Not exposed: add_cell_col / set_columns
     // Type enforced by generic: add_col
     // Redundant: from_csv uses from_rows
-    // Covered: add_row tested in errors()
-    // TODO: test from_rows + from_struct
+    match generic_dataframe().add_row(row!(4, "Sally", 23, 700, "true")) {
+        Ok(_) => panic!("Type err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Invalid col types".to_string()),
+    }
+    let result = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![
+            row!(4, "Sally", 23, 700, true),
+            row!(1, "Jasper", 41, "900", false),
+            row!(5, "Jake", 33, 1200, true),
+            row!(2, "Susie", 27, 200, true),
+            row!(3, "Spruce", 24, 800, false),
+        ],
+    );
+    match result {
+        Ok(_) => panic!("Type err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Inconsistent col types".to_string()),
+    }
+    let result = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![
+            row!(4, "Sally", 23, 700, None::<String>),
+            row!(1, "Jasper", 41, 900, false),
+            row!(5, "Jake", 33, 1200, true),
+            row!(2, "Susie", 27, 200, true),
+            row!(3, "Spruce", 24, 800, false),
+        ],
+    );
+    match result {
+        Ok(_) => panic!("Type err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Inconsistent col types".to_string()),
+    }
+    let result = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![
+            row!(4, "Sally", 23, 700, true),
+            row!(1, "Jasper", 41, 900, false),
+            row!(5, "Jake", 33, 1200, true),
+            row!(None::<bool>, "Susie", 27, 200, true),
+            row!(3, "Spruce", 24, 800, false),
+        ],
+    );
+    match result {
+        Ok(_) => panic!("Type err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Inconsistent col types".to_string()),
+    }
+
+    let result = Dataframe::from_structs(vec![
+        SneakyType {
+            name: "Jake".to_string(),
+            age: 23,
+            val: true,
+        },
+        SneakyType {
+            name: "Sally".to_string(),
+            age: 44,
+            val: false,
+        },
+        SneakyType {
+            name: "Jasper".to_string(),
+            age: 61,
+            val: true,
+        },
+    ]);
+    match result {
+        Ok(_) => panic!("Type err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Inconsistent col types".to_string()),
+    }
 }
