@@ -4,11 +4,11 @@ fn main() {
     let df = Dataframe::from_rows(
         vec!["strangs", "nums", "null nums"],
         vec![
-            row!("sugar", 2, Some(-10)),
-            row!("sugar", 1, None::<i64>),
-            row!("candy", 7, Some(200)),
-            row!("sugar", 3, Some(400)),
-            row!("candy", 9, Some(777)),
+            row!("sugar", 0, Some(-10)),
+            row!("sweets", 1, None::<i64>),
+            row!("candy pop", 2, Some(200)),
+            row!("caramel", 3, Some(400)),
+            row!("chocolate", 4, Some(777)),
         ],
     )
     .unwrap();

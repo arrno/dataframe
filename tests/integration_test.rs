@@ -111,7 +111,7 @@ fn slice_dataframe() {
     );
 
     let mut mut_df = generic_dataframe();
-    assert_eq!(mut_df.cell((2, "age")).unwrap(), &33.to_cell());
+    assert_eq!(mut_df.cell(2, "age").unwrap(), &33.to_cell());
 }
 
 #[test]
@@ -1152,3 +1152,5 @@ fn mismatched_types() {
         Err(err) => assert_eq!(err.to_string(), "Invalid cell type".to_string()),
     }
 }
+
+// test set_value / update_value for idx and type errors

@@ -234,12 +234,11 @@ Copy/update an existing column into a new column
 ```rust
 df.add_col(
     "age is even",
-    df.column("age")
+    df.col_values("age")
         .unwrap()
-        .values()
         .iter()
         .map(|cell| match cell {
-            Cell::Int(score) => Some(score % 2 == 0),
+            Cell::Int(age) => Some(age % 2 == 0),
             _ => None::<bool>,
         })
         .collect(),
@@ -359,10 +358,21 @@ df.col_mut("id")
     .unwrap();
 ```
 **By cell**
+
+Directly
 ```rust
-if let Cell::Int(val) = df.cell_mut((2, "age")).unwrap() {
-    *val += 2;
-}
+// index, column, new_value
+df.set_val(2, "score", 500).unwrap();
+```
+Via function
+```rust
+// index, column, function
+df.update_val(0, "score", |cell| {
+    if let Cell::Int(val) = cell {
+        *val *= 2
+    }
+})
+.unwrap();
 ```
 ## Sort
 **Simple**

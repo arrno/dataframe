@@ -513,11 +513,17 @@ impl Dataframe {
             None => Err(Error::new("Column not found".to_string())),
         }
     }
+    pub fn col_values(&self, name: &str) -> Result<&Vec<Cell>, Error> {
+        match self.columns.iter().find(|col| col.name() == name) {
+            Some(col) => Ok(col.values()),
+            None => Err(Error::new("Column not found".to_string())),
+        }
+    }
 
-    pub fn cell(&mut self, loc: (usize, &str)) -> Option<&Cell> {
-        if let Ok(col) = self.col_mut(loc.1) {
-            if col.values().len() >= loc.0 {
-                return Some(&col.values_mut()[loc.0]);
+    pub fn cell(&mut self, idx: usize, col: &str) -> Option<&Cell> {
+        if let Ok(col) = self.col_mut(col) {
+            if col.values().len() >= idx {
+                return Some(&col.values_mut()[idx]);
             }
         }
         None
@@ -532,16 +538,43 @@ impl Dataframe {
         None
     }
 
-    pub fn set_val<T: ToCell>(&mut self, loc: (usize, &str), val: T) -> Result<(), Error> {
-        if let Ok(col) = self.col_mut(loc.1) {
+    pub fn set_val<T: ToCell>(&mut self, idx: usize, col_name: &str, val: T) -> Result<(), Error> {
+        if let Ok(col) = self.col_mut(col_name) {
+            if idx >= col.values().len() {
+                return Err(Error::new("Index out of bounds".to_string()));
+            }
             let new_cell = val.to_cell();
             if !col.check_type(&new_cell) {
                 return Err(Error::new("Invalid cell type".to_string()));
             }
-            col.values_mut()[loc.0] = new_cell;
+            col.values_mut()[idx] = new_cell;
             Ok(())
         } else {
             Err(Error::new("Column not found".to_string()))
+        }
+    }
+
+    pub fn update_val(
+        &mut self,
+        idx: usize,
+        col_name: &str,
+        f: fn(x: &mut Cell),
+    ) -> Result<(), Error> {
+        match self.columns.iter_mut().find(|col| col.name() == col_name) {
+            Some(col) => {
+                if idx >= col.values().len() {
+                    return Err(Error::new("Index out of bounds".to_string()));
+                }
+                let mut new_cell = col.values()[idx].clone();
+                f(&mut new_cell);
+                if col.check_type(&new_cell) {
+                    col.values_mut()[idx] = new_cell;
+                } else {
+                    return Err(Error::new("Invalid cell type".to_string()));
+                };
+                Ok(())
+            }
+            None => Err(Error::new("Column not found".to_string())),
         }
     }
 
