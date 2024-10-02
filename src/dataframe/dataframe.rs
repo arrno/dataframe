@@ -532,6 +532,19 @@ impl Dataframe {
         None
     }
 
+    pub fn set_val<T: ToCell>(&mut self, loc: (usize, &str), val: T) -> Result<(), Error> {
+        if let Ok(col) = self.col_mut(loc.1) {
+            let new_cell = val.to_cell();
+            if !col.check_type(&new_cell) {
+                return Err(Error::new("Invalid cell type".to_string()));
+            }
+            col.values_mut()[loc.0] = new_cell;
+            Ok(())
+        } else {
+            Err(Error::new("Column not found".to_string()))
+        }
+    }
+
     pub fn concat(&mut self, with: Dataframe) -> Result<(), Error> {
         if !self.compare(&with) {
             return Err(Error::new(

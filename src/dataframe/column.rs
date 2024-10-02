@@ -48,6 +48,9 @@ impl Col {
         }
         Ok(())
     }
+    pub fn check_type(&self, cell: &Cell) -> bool {
+        (self.type_check)(cell)
+    }
     pub fn values_mut(&mut self) -> &mut Vec<Cell> {
         &mut self.values
     }
