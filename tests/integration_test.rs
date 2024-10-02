@@ -110,7 +110,7 @@ fn slice_dataframe() {
         expected_df
     );
 
-    let mut mut_df = generic_dataframe();
+    let mut_df = generic_dataframe();
     assert_eq!(mut_df.cell(2, "age").unwrap(), &33.to_cell());
 }
 
@@ -1165,6 +1165,43 @@ fn mismatched_types() {
         Ok(_) => panic!("Type err not detected"),
         Err(err) => assert_eq!(err.to_string(), "Invalid cell type".to_string()),
     }
+
+    let result = generic_dataframe().set_val(0, "id", 2.2);
+    match result {
+        Ok(_) => panic!("Type err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Invalid cell type".to_string()),
+    }
+    let result = generic_dataframe().set_val(0, "unknown", 2.2);
+    match result {
+        Ok(_) => panic!("Missing column err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Column not found".to_string()),
+    }
+
+    let result = generic_dataframe().update_val(0, "id", |cell| *cell = Cell::Float(4.4));
+    match result {
+        Ok(_) => panic!("Type err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Invalid cell type".to_string()),
+    }
+    let result = generic_dataframe().update_val(0, "unknown", |cell| *cell = Cell::Int(4));
+    match result {
+        Ok(_) => panic!("Missing column err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Column not found".to_string()),
+    }
 }
 
-// test set_value / update_value / .cell for idx/type errors.
+#[test]
+fn index_errors() {
+    let result = generic_dataframe().set_val(100, "id", 2);
+    match result {
+        Ok(_) => panic!("Index error not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Index out of bounds".to_string()),
+    }
+    let result = generic_dataframe().update_val(100, "id", |cell| *cell = Cell::Int(4));
+    match result {
+        Ok(_) => panic!("Index error not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Index out of bounds".to_string()),
+    }
+    let df = generic_dataframe();
+    let result = df.cell(100, "id");
+    assert_eq!(result, None);
+}

@@ -520,10 +520,10 @@ impl Dataframe {
         }
     }
 
-    pub fn cell(&mut self, idx: usize, col: &str) -> Option<&Cell> {
-        if let Ok(col) = self.col_mut(col) {
+    pub fn cell(&self, idx: usize, col: &str) -> Option<&Cell> {
+        if let Ok(col) = self.column(col) {
             if idx < col.values().len() {
-                return Some(&col.values_mut()[idx]);
+                return Some(&col.values()[idx]);
             }
         }
         None

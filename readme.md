@@ -179,53 +179,22 @@ df.add_col("new column", vec![2, 4, 6]).unwrap();
 df.add_row(row!("Jane", 44, true)).unwrap();
 ```
 **Concat**
+
+Essentially a union join
 ```rust
-df.concat(
-    Dataframe::from_rows(
-        vec!["id", "name", "score", "val"],
-        vec![
-            row!(4, "Sam", 23, true),
-            row!(5, "Julie", 41, false),
-            row!(6, "Jill", 33, true),
-        ],
-    )
-    .unwrap(),
-)
-.unwrap();
+df.concat(other_df).unwrap();
 ```
 **Join**
 
 Inner
 ```rust
 // join(other_df, (left_col, right_col))
-let result_df = df
-    .join(
-        &Dataframe::from_rows(
-            vec!["user_id", "score", "rate"],
-            vec![
-                row!(1, 700, 0.4),
-                row!(2, 400, 0.7),
-                row!(3, 900, 0.6),
-            ],
-        )
-        .unwrap(),
-        ("id", "user_id"),
-    )
-    .unwrap();
+let result_df = df.join(&other_df, ("id", "user_id")).unwrap();
 ```
 
 Left
 ```rust
-let result_df = df
-    .left_join(
-        &Dataframe::from_rows(
-            vec!["user_id", "score", "rate"],
-            vec![row!(1, 700, 0.4)],
-        )
-        .unwrap(),
-        ("nums", "user_id"),
-    )
-    .unwrap();
+let result_df = df.left_join(&other_df, ("id", "user_id")).unwrap();
 ```
 
 **More on columns**
