@@ -135,13 +135,27 @@ fn apply_dataframe() {
     )
     .unwrap();
     assert_eq!(df, expected_df);
-    if let Cell::Int(val) = df.cell_mut((2, "age")).unwrap() {
-        *val += 2;
-    }
+    df.update_val(2, "age", |cell| {
+        if let Cell::Int(val) = cell {
+            *val += 2;
+        }
+    })
+    .unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],
         vec![
             row!(12, "Sasha", 33, 1600, false),
+            row!(14, "Jane", 24, 700, true),
+            row!(16, "Jerry", 41, 400, true),
+        ],
+    )
+    .unwrap();
+    assert_eq!(df, expected_df);
+    df.set_val(0, "name", "NEWNAME").unwrap();
+    let expected_df = Dataframe::from_rows(
+        vec!["id", "name", "age", "score", "registered"],
+        vec![
+            row!(12, "NEWNAME", 33, 1600, false),
             row!(14, "Jane", 24, 700, true),
             row!(16, "Jerry", 41, 400, true),
         ],
@@ -1153,4 +1167,4 @@ fn mismatched_types() {
     }
 }
 
-// test set_value / update_value for idx and type errors
+// test set_value / update_value / .cell for idx/type errors.

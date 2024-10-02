@@ -522,17 +522,8 @@ impl Dataframe {
 
     pub fn cell(&mut self, idx: usize, col: &str) -> Option<&Cell> {
         if let Ok(col) = self.col_mut(col) {
-            if col.values().len() >= idx {
+            if idx < col.values().len() {
                 return Some(&col.values_mut()[idx]);
-            }
-        }
-        None
-    }
-
-    pub fn cell_mut(&mut self, loc: (usize, &str)) -> Option<&mut Cell> {
-        if let Ok(col) = self.col_mut(loc.1) {
-            if col.values().len() >= loc.0 {
-                return Some(&mut col.values_mut()[loc.0]);
             }
         }
         None
