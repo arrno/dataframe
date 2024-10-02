@@ -349,11 +349,14 @@ let df = df.filter(not(exp("age", Mod(2), 0))).unwrap();
 ## Mutate
 **By column**
 ```rust
-df.col_mut("id").unwrap().iter_mut().for_each(|cell| {
-    if let Cell::Int(val) = cell {
-        *val *= 2
-    }
-});
+df.col_mut("id")
+    .unwrap()
+    .apply(|cell| {
+        if let Cell::Int(val) = cell {
+            *val *= 2
+        }
+    })
+    .unwrap();
 ```
 **By cell**
 ```rust

@@ -1,3 +1,4 @@
+use crate::util::Error;
 use crate::{cell::*, dataframe::Dataframe};
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
@@ -7,6 +8,7 @@ pub struct Col {
     name: String,
     values: Vec<Cell>,
     typed: Cell,
+    type_check: fn(&Cell) -> bool,
 }
 
 impl Col {
@@ -21,15 +23,30 @@ impl Col {
         Col {
             name: name,
             values: set.into_iter().map(|val| val.to_cell()).collect(), // should validate all types match
+            type_check: cell_to_type_check(&z),
             typed: z,
         }
     }
     pub fn build(name: String, values: Vec<Cell>, typed: Cell) -> Self {
+        let type_check = cell_to_type_check(&typed);
         Col {
             name,
             values,
             typed,
+            type_check,
         }
+    }
+    pub fn apply(&mut self, f: fn(x: &mut Cell)) -> Result<(), Error> {
+        for cell in self.values.iter_mut() {
+            let mut new_cell = cell.clone();
+            f(&mut new_cell);
+            if (self.type_check)(&new_cell) {
+                *cell = new_cell
+            } else {
+                return Err(Error::new("Invalid cell type".to_string()));
+            }
+        }
+        Ok(())
     }
     pub fn values_mut(&mut self) -> &mut Vec<Cell> {
         &mut self.values
@@ -54,6 +71,7 @@ impl Col {
             name: self.name.clone(),
             values: vec![],
             typed: self.typed.clone(),
+            type_check: cell_to_type_check(&self.typed),
         }
     }
 
@@ -324,6 +342,7 @@ impl<'a> ColSlice<'a> {
             name: self.name.to_string(),
             values: vec![],
             typed: self.typed.clone(),
+            type_check: cell_to_type_check(&self.typed),
         }
     }
 }

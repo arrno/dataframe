@@ -117,11 +117,14 @@ fn slice_dataframe() {
 #[test]
 fn apply_dataframe() {
     let mut df = dataframe_extension();
-    df.col_mut("id").unwrap().iter_mut().for_each(|cell| {
-        if let Cell::Int(val) = cell {
-            *val *= 2
-        }
-    });
+    df.col_mut("id")
+        .unwrap()
+        .apply(|cell| {
+            if let Cell::Int(val) = cell {
+                *val *= 2
+            }
+        })
+        .unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],
         vec![
@@ -698,7 +701,7 @@ fn errors() {
         Ok(_) => panic!("Missing col err not detected"),
         Err(err) => assert_eq!(err.to_string(), "Column not found".to_string()),
     }
-    match df.column_mut("unknown") {
+    match df.col_mut("unknown") {
         Ok(_) => panic!("Missing col err not detected"),
         Err(err) => assert_eq!(err.to_string(), "Column not found".to_string()),
     }
@@ -1138,5 +1141,14 @@ fn mismatched_types() {
     match result {
         Ok(_) => panic!("Type err not detected"),
         Err(err) => assert_eq!(err.to_string(), "Inconsistent col types".to_string()),
+    }
+    // apply
+    let result = generic_dataframe()
+        .col_mut("id")
+        .unwrap()
+        .apply(|cell| *cell = Cell::Str("hello".to_string()));
+    match result {
+        Ok(_) => panic!("Type err not detected"),
+        Err(err) => assert_eq!(err.to_string(), "Invalid cell type".to_string()),
     }
 }

@@ -192,13 +192,6 @@ impl Dataframe {
             None => false,
         }
     }
-    pub fn col_mut(&mut self, name: &str) -> Option<&mut Vec<Cell>> {
-        self.columns
-            .iter_mut()
-            .find(|col| col.name() == name)?
-            .values_mut()
-            .into()
-    }
 
     pub fn col_map(&self) -> HashMap<String, &Vec<Cell>> {
         self.columns
@@ -462,7 +455,7 @@ impl Dataframe {
     }
 
     pub fn sort(&mut self, by: &str, order: SortOrder) -> Result<(), Error> {
-        let self_index = self.column_mut(&by)?;
+        let self_index = self.col_mut(&by)?;
         let mut sort_instructions = Vec::new();
         self_index.values_mut().sort_by(|cur, prev| match order {
             SortOrder::Asc => {
@@ -514,7 +507,7 @@ impl Dataframe {
         }
     }
 
-    pub fn column_mut(&mut self, name: &str) -> Result<&mut Col, Error> {
+    pub fn col_mut(&mut self, name: &str) -> Result<&mut Col, Error> {
         match self.columns.iter_mut().find(|col| col.name() == name) {
             Some(col) => Ok(col),
             None => Err(Error::new("Column not found".to_string())),
@@ -522,7 +515,7 @@ impl Dataframe {
     }
 
     pub fn cell(&mut self, loc: (usize, &str)) -> Option<&Cell> {
-        if let Ok(col) = self.column_mut(loc.1) {
+        if let Ok(col) = self.col_mut(loc.1) {
             if col.values().len() >= loc.0 {
                 return Some(&col.values_mut()[loc.0]);
             }
@@ -531,7 +524,7 @@ impl Dataframe {
     }
 
     pub fn cell_mut(&mut self, loc: (usize, &str)) -> Option<&mut Cell> {
-        if let Ok(col) = self.column_mut(loc.1) {
+        if let Ok(col) = self.col_mut(loc.1) {
             if col.values().len() >= loc.0 {
                 return Some(&mut col.values_mut()[loc.0]);
             }
