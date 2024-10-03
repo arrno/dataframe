@@ -273,12 +273,7 @@ df.retain_cols(["name", "registered"].into());
 
 **Rename column**
 ```rust
-// returns true if successful
-if df.rename_col("strangs", "Strings") {
-    println!("Success!");
-} else {
-    println!("Column not found.")
-}
+df.rename_col("strangs", "Strings").unwrap();
 ```
 
 ## Filter
@@ -348,8 +343,8 @@ df.update_val(0, "score", |cell| {
 ## Sort
 **Simple**
 ```rust
-// sort by, sort dir [asc() | desc()]
-df.sort("at", asc()).unwrap();
+// sort by, sort dir [Asc | Desc]
+df.sort("at", Asc).unwrap();
 ```
 **Complex**
 
@@ -357,9 +352,9 @@ Use this method for multi column sorting
 ```rust
 let sorted = df
     .into_sort()
-    .sort("one", asc())
-    .sort("two", asc())
-    .sort("three", asc())
+    .sort("one", Asc)
+    .sort("two", Asc)
+    .sort("three", Desc)
     .collect()
     .unwrap();
 ```

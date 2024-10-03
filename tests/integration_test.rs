@@ -418,7 +418,7 @@ fn join_dataframe() {
 #[test]
 fn sort_dataframe() {
     let mut df = generic_dataframe();
-    df.sort("id", desc()).unwrap();
+    df.sort("id", Desc).unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],
         vec![
@@ -434,7 +434,7 @@ fn sort_dataframe() {
 
     // asc by timestamp
     let mut df = time_dataframe();
-    df.sort("at", asc()).unwrap();
+    df.sort("at", Asc).unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "at"],
         vec![
@@ -464,9 +464,9 @@ fn into_sort_dataframe() {
     )
     .unwrap()
     .into_sort()
-    .sort("one", asc())
-    .sort("two", asc())
-    .sort("three", asc())
+    .sort("one", Asc)
+    .sort("two", Asc)
+    .sort("three", Asc)
     .collect()
     .unwrap();
 

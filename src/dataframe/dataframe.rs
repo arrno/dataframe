@@ -5,7 +5,7 @@ pub use crate::{
     group::Reducer::*,
     row,
     row::*,
-    sort::*,
+    sort::{SortOrder::*, *},
     util::Error,
 };
 use crate::{
@@ -183,13 +183,13 @@ impl Dataframe {
         wtr.flush()?;
         Ok(())
     }
-    pub fn rename_col(&mut self, from: &str, to: &str) -> bool {
+    pub fn rename_col(&mut self, from: &str, to: &str) -> Result<(), Error> {
         match self.columns.iter_mut().find(|col| col.name() == from) {
             Some(col) => {
                 col.rename(to.to_string());
-                true
+                Ok(())
             }
-            None => false,
+            None => Err(Error::new("Column not found".to_string())),
         }
     }
 
