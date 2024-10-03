@@ -147,6 +147,7 @@ df.info();
 ```rust
 df.describe().print();
 ```
+
 Creates a describe df and prints it:
 ```
 +---------+---------+------+-----------+
@@ -172,12 +173,37 @@ df.col_names();
 ## Extend
 **Add column**
 ```rust
-df.add_col("new column", vec![2, 4, 6]).unwrap();
+df.add_col("value", vec![-10, 30, 20, 4]).unwrap();
+```
+```
++----+-------+--------+  +-------+
+| id | name  | active |    value |
++----+-------+--------+  +-------+
+|  0 | Jake  | true   |      -10 |
+|  1 | Jane  | true   |       30 |
+|  2 | Sally | false  |       20 |
+|  3 | Sam   | false  |        4 |
++----+-------+--------+  +-------+
 ```
 **Add row**
 ```rust
-df.add_row(row!("Jane", 44, true)).unwrap();
+df.add_row(row!(4, "Susan", false, 7)).unwrap();
 ```
+
+```
++----+-------+--------+-------+
+| id | name  | active | value |
++----+-------+--------+-------+
+|  0 | Jake  | true   |   -10 |
+|  1 | Jane  | true   |  Null |
+|  2 | Sally | false  |   200 |
+|  3 | Sam   | false  |   400 |
+
++    +       +        +       +
+|  4 | Susan | false  |     7 |
++----+-------+--------+-------+
+```
+
 **Concat**
 
 Extend vertically, essentially a union join
@@ -275,11 +301,29 @@ df.add_col(
 // to_dataframe copies DataSlice into new Dataframe
 df.slice(1, 4).unwrap().to_dataframe();
 ```
+```
++      +       +        +       +
+|  100 | Jane  | true   |  Null |
+|  200 | Sally | false  |   200 |
+|  300 | Sam   | false  |   400 |
++      +       +        +       +
+```
 **By column**
 ```rust
 df.col_slice(["name", "age"].into())
     .unwrap()
     .to_dataframe();
+```
+```
++--------+-----+
+  name   | age 
++--------+-----+
+  Jane   |  24 
+  Sally  |  56 
+  Susan  |  43 
+  Jasper |  78 
+  Sam    |  37 
++--------+-----+
 ```
 **Get cell**
 ```rust
@@ -321,6 +365,18 @@ Operation enum variants:
 ```rust
 // where age val is not null
 let df = df.filter(exp("age", Neq, None::<i64>)).unwrap();
+```
+```
+Before                     After
++--------+------+-------+  +--------+------+-------+
+| name   | age  | value |  | name   | age  | value |
++--------+------+-------+  +--------+------+-------+
+| Jane   | Null |   -10 |  | Sally  |   56 |  Null |
+| Sally  |   56 |  Null |  | Susan  |   43 |   200 |
+| Susan  |   43 |   200 |  | Sam    |   37 |   777 |
+| Jasper | Null |   400 |  +--------+------+-------+
+| Sam    |   37 |   777 |
++--------+------+-------+
 ```
 **Complex**
 
