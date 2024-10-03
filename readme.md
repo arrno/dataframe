@@ -213,15 +213,15 @@ let result_df = df.join(&other_df, "id", "user_id").unwrap();
 ```
 
 ```
-+----+-------+-------- + -----+---------+
-| id | name  | active     uid | balance |
-+----+-------+-------- + -----+---------+
-|  0 | Jake  | true         0 |     -10 |
-|  1 | Jane  | true         1 |    Null |
-|  2 | Sally | false        2 |     200 |
-|  3 | Sam   | false        3 |     400 |
-|  4 | Susan | false        4 |     777 |
-+----+-------+-------- + -----+---------+
++----+-------+--------  +  -----+---------+
+| id | name  | active       uid | balance |
++----+-------+--------  +  -----+---------+
+|  0 | Jake  | true           0 |     -10 |
+|  1 | Jane  | true           1 |    Null |
+|  2 | Sally | false          2 |     200 |
+|  3 | Sam   | false          3 |     400 |
+|  4 | Susan | false          4 |     777 |
++----+-------+--------  +  -----+---------+
 ```
 
 **Left join**
