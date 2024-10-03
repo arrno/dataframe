@@ -369,11 +369,11 @@ impl Dataframe {
             .len()
     }
 
-    pub fn join(&self, with: &Dataframe, on: (&str, &str)) -> Result<Self, Error> {
-        self.do_join(with, on, false)
+    pub fn join(&self, with: &Dataframe, left: &str, right: &str) -> Result<Self, Error> {
+        self.do_join(with, (left, right), false)
     }
-    pub fn left_join(&self, with: &Dataframe, on: (&str, &str)) -> Result<Self, Error> {
-        self.do_join(with, on, true)
+    pub fn left_join(&self, with: &Dataframe, left: &str, right: &str) -> Result<Self, Error> {
+        self.do_join(with, (left, right), true)
     }
     fn do_join(&self, with: &Dataframe, on: (&str, &str), left: bool) -> Result<Self, Error> {
         let self_index = self.column(on.0)?;

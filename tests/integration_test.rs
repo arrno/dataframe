@@ -385,7 +385,7 @@ fn extend_dataframe() {
 #[test]
 fn join_dataframe() {
     let df = generic_dataframe();
-    let result_df = df.join(&alt_dataframe_sparse(), ("id", "id")).unwrap();
+    let result_df = df.join(&alt_dataframe_sparse(), "id", "id").unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered", "snack", "count"],
         vec![
@@ -399,7 +399,7 @@ fn join_dataframe() {
     assert_eq!(result_df, expected_df);
 
     let df = generic_dataframe();
-    let result_df = df.left_join(&alt_dataframe_sparse(), ("id", "id")).unwrap();
+    let result_df = df.left_join(&alt_dataframe_sparse(), "id", "id").unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered", "snack", "count"],
         vec![
@@ -704,7 +704,7 @@ fn errors() {
             "Concat against mismatched dataframes".to_string()
         ),
     }
-    match df.join(&generic_dataframe(), ("id", "id")) {
+    match df.join(&generic_dataframe(), "id", "id") {
         Ok(_) => panic!("Join unique err not detected"),
         Err(err) => assert_eq!(
             err.to_string(),

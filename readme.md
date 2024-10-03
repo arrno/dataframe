@@ -180,21 +180,23 @@ df.add_row(row!("Jane", 44, true)).unwrap();
 ```
 **Concat**
 
-Essentially a union join
+Extend vertically, essentially a union join
 ```rust
 df.concat(other_df).unwrap();
 ```
 **Join**
 
-Inner
+Extend horizontally on left/right column value match
+
+**Inner join**
 ```rust
-// join(other_df, (left_col, right_col))
-let result_df = df.join(&other_df, ("id", "user_id")).unwrap();
+// join(other_df, left_column, right_column)
+let result_df = df.join(&other_df, "id", "user_id").unwrap();
 ```
 
-Left
+**Left join**
 ```rust
-let result_df = df.left_join(&other_df, ("id", "user_id")).unwrap();
+let result_df = df.left_join(&other_df, "id", "user_id").unwrap();
 ```
 
 **More on columns**
