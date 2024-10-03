@@ -184,6 +184,24 @@ Extend vertically, essentially a union join
 ```rust
 df.concat(other_df).unwrap();
 ```
+
+```
++-----------+------+-----------+
+| strangs   | nums | null nums |
++-----------+------+-----------+
+| sugar     |    0 |       -10 |
+| sweets    |    1 |      Null |
+| candy pop |    2 |       200 |
+| caramel   |    3 |       400 |
+
++           +      +           +
+
+| chocolate |    4 |       777 |
+| cinnamon  |    5 |       300 |
+| syrup     |    6 |      Null |
+| sprinkles |    7 |      -500 |
++-----------+------+-----------+
+```
 **Join**
 
 Extend horizontally on left/right column value match
@@ -192,6 +210,18 @@ Extend horizontally on left/right column value match
 ```rust
 // join(other_df, left_column, right_column)
 let result_df = df.join(&other_df, "id", "user_id").unwrap();
+```
+
+```
++----+-------+--------+ + -----+---------+
+| id | name  | active      uid | balance |
++----+-------+--------+ + -----+---------+
+|  0 | Jake  | true          0 |     -10 |
+|  1 | Jane  | true          1 |    Null |
+|  2 | Sally | false         2 |     200 |
+|  3 | Sam   | false         3 |     400 |
+|  4 | Susan | false         4 |     777 |
++----+-------+--------+ + -----+---------+
 ```
 
 **Left join**
