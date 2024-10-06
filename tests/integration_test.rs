@@ -489,7 +489,7 @@ fn into_sort_dataframe() {
 #[test]
 fn opt_dataframe() {
     // Not Null
-    let mut df = option_dataframe();
+    let df = option_dataframe();
     let df = df.filter(exp("age", neq(), None::<i64>)).unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],
@@ -499,7 +499,7 @@ fn opt_dataframe() {
     assert_eq!(df, expected_df);
 
     // Is Null
-    let mut df = option_dataframe();
+    let df = option_dataframe();
     let df = df.filter(exp("age", eq(), None::<i64>)).unwrap();
     let expected_df = Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],

@@ -280,7 +280,7 @@ impl Dataframe {
         Ok(())
     }
 
-    pub fn filter(&mut self, exp: Exp) -> Result<Self, Error> {
+    pub fn filter(self, exp: Exp) -> Result<Self, Error> {
         let col_map = self.col_map();
         let filter_set = (0..self.length())
             .map(|i| {
