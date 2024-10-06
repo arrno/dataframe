@@ -531,4 +531,4 @@ df.to_slice()
 df.to_csv("./tests/test.csv").unwrap();
 ```
 ## Examples
-For more examples, see `./tests/integration_test.rs`
+For more examples, see `./tests/integration_test.rs` and `./tests/example/example.rs`

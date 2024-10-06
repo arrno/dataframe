@@ -2,6 +2,8 @@ use rowboat::dataframe::*;
 use serde::Deserialize;
 use std::collections::HashMap;
 
+mod example;
+
 fn generic_dataframe() -> Dataframe {
     Dataframe::from_rows(
         vec!["id", "name", "age", "score", "registered"],
@@ -1204,4 +1206,9 @@ fn index_errors() {
     let df = generic_dataframe();
     let result = df.cell(100, "id");
     assert_eq!(result, None);
+}
+
+#[test]
+fn example() {
+    example::example::main();
 }

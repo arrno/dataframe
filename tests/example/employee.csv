@@ -1,0 +1,24 @@
+id,first_name,last_name,start_date,salary,department_id,active
+0, Jasper,James,2024-01-05 00:00:00Z,150,0,true
+1, John,Jacob,2023-09-05 00:00:00Z,80,2,true
+2, Susan,Schmidt,2024-11-05 00:00:00Z,190,2,true
+3, Paul,Tarsus,2024-06-05 00:00:00Z,96,0,true
+4, Jake,Paul,2022-07-05 00:00:00Z,125,1,true
+5, Randy,Reams,2024-05-05 00:00:00Z,160,3,true
+6, Tom,Long,2024-03-05 00:00:00Z,105,0,true
+7, Alex,Major,2021-02-05 00:00:00Z,95,1,true
+8, Brian,Thumb,2021-08-09 00:00:00Z,95,1,false
+9, Josh,Rush,2020-12-05 00:00:00Z,165,1,true
+10, Lauren,Kent,2023-01-05 00:00:00Z,169,0,true
+11, Henry,Hollandaise,2023-07-05 00:00:00Z,145,0,true
+12, Catherine,Jones,2022-04-05 00:00:00Z,137,4,true
+13, Maria,Stein,2022-02-05 00:00:00Z,167,0,true
+14, Frank,Turing,2023-06-05 00:00:00Z,180,3,true
+15, Jane,Spinster,2024-07-05 00:00:00Z,182,3,true
+16, Camden,Barter,2023-02-07 00:00:00Z,182,3,false
+17, Peggy,Sue,2023-10-05 00:00:00Z,86,0,true
+18, Greg,Holmes,2020-11-05 00:00:00Z,110,4,true
+19, George,Jennings,2024-03-05 00:00:00Z,125,1,true
+20, Sean,Scalding,2024-08-05 00:00:00Z,155,3,true
+21, Jerry,Jones,2021-09-13 00:00:00Z,155,3,false
+22, Sarah,Swoon,2019-03-05 00:00:00Z,160,2,true
