@@ -673,6 +673,9 @@ impl Dataframe {
     pub fn group_by(&self, by: &str) -> DataGroup {
         DataGroup::new(self.to_slice(), by.to_string())
     }
+    pub fn iter_sql<'a, 'b>(&'a self, table_name: &'b str) -> IterSQL<'a, 'b> {
+        IterSQL::new(self.into(), table_name)
+    }
 }
 
 // Moving these functions into dataframe module so as to not expose `set_columns`

@@ -81,6 +81,38 @@ impl<'a> DataSlice<'a> {
     pub fn iter(self) -> Iterrows<'a> {
         iterrows::Iterrows::new(self)
     }
+
+    pub fn to_sql(&self, table_name: &str) -> (String, Vec<String>) {
+        let cols = self
+            .col_names()
+            .iter()
+            .map(|name| format!("`{name}`"))
+            .collect::<Vec<String>>()
+            .join(", ");
+        let mut args = vec![];
+        let rows = (0..self.length())
+            .map(|i| {
+                let vals = self
+                    .columns
+                    .iter()
+                    .map(|col| match col.values()[i] {
+                        Cell::Str(_) => {
+                            args.push(col.values()[i].as_string());
+                            "?".to_string()
+                        }
+                        _ => col.values()[i].to_sql(),
+                    })
+                    .collect::<Vec<String>>()
+                    .join(", ");
+                format!("({vals})")
+            })
+            .collect::<Vec<String>>()
+            .join(",\n\t");
+        (
+            format!("INSERT INTO `{table_name}` ({cols})\nVALUES\n\t{rows};"),
+            args,
+        )
+    }
 }
 
 impl<'a> From<&'a Dataframe> for DataSlice<'a> {

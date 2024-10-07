@@ -54,6 +54,17 @@ impl Cell {
             Cell::Null(_) => String::from("Null"),
         }
     }
+    pub fn to_sql(&self) -> String {
+        match self {
+            Cell::Int(x) => format!("{x}"),
+            Cell::Uint(x) => format!("{x}"),
+            Cell::Str(x) => format!("'{x}'"),
+            Cell::Bool(x) => format!("{x}"),
+            Cell::Float(x) => format!("{x}"),
+            Cell::DateTime(x) => format!("'{x}'"),
+            Cell::Null(_) => String::from("NULL"),
+        }
+    }
     pub fn type_string(&self) -> String {
         match self {
             Cell::Int(_) => String::from("Int"),

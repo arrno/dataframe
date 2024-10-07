@@ -100,3 +100,41 @@ impl<'a> Iterator for IterChunk<'a> {
         }
     }
 }
+
+// SQL
+pub struct IterSQL<'a, 'b> {
+    data_slice: DataSlice<'a>,
+    chunk_size: usize,
+    index: usize,
+    table_name: &'b str,
+}
+impl<'a, 'b> IterSQL<'a, 'b> {
+    pub fn new(slice: DataSlice<'a>, table_name: &'b str) -> Self {
+        Self {
+            data_slice: slice,
+            chunk_size: 500,
+            index: 0,
+            table_name: table_name,
+        }
+    }
+}
+impl<'a, 'b> Iterator for IterSQL<'a, 'b> {
+    type Item = (String, Vec<String>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.data_slice.length() {
+            self.index += self.chunk_size;
+            Some(
+                self.data_slice
+                    .slice(
+                        self.index - self.chunk_size,
+                        std::cmp::min(self.index, self.data_slice.length()),
+                    )
+                    .unwrap()
+                    .to_sql(self.table_name),
+            )
+        } else {
+            None
+        }
+    }
+}
