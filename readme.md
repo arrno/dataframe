@@ -530,5 +530,14 @@ df.to_slice()
 ```rust
 df.to_csv("./tests/test.csv").unwrap();
 ```
+**To SQL**
+
+Convert the df into chunks of SQL insert statements with corresponding `Vec<String>` args. Meant to be compatible with `sqlx` library.
+```rust
+df.iter_sql("my_table", 500).for_each(|(query, args)| {
+    println!("{query}");
+    println!("{:?}", args);
+});
+```
 ## Examples
 For more examples, see `./tests/integration_test.rs` and `./tests/example/example.rs` and `./tests/example/example_from_sql.rs`

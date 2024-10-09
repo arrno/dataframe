@@ -109,10 +109,10 @@ pub struct IterSQL<'a, 'b> {
     table_name: &'b str,
 }
 impl<'a, 'b> IterSQL<'a, 'b> {
-    pub fn new(slice: DataSlice<'a>, table_name: &'b str) -> Self {
+    pub fn new(slice: DataSlice<'a>, table_name: &'b str, size: usize) -> Self {
         Self {
             data_slice: slice,
-            chunk_size: 500,
+            chunk_size: size,
             index: 0,
             table_name: table_name,
         }
