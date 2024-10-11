@@ -1209,6 +1209,65 @@ fn index_errors() {
 }
 
 #[test]
+fn iter_sql() {
+    let df = Dataframe::from_rows(
+        vec!["strings", "nums", "more_strings", "bools", "times"],
+        vec![
+            row!(
+                "sugar",
+                0,
+                "bobbyboy",
+                true,
+                Timestamp(2024, 10, 08, 12, 0, 0)
+            ),
+            row!(
+                "sweets",
+                1,
+                "dan",
+                true,
+                Timestamp(2022, 08, 02, 02, 10, 55)
+            ),
+            row!(
+                "candy pop",
+                2,
+                "randal",
+                true,
+                Timestamp(2021, 01, 08, 12, 30, 20)
+            ),
+            row!(
+                "caramel",
+                3,
+                "jerry",
+                true,
+                Timestamp(2023, 10, 06, 14, 10, 20)
+            ),
+            row!(
+                "chocolate",
+                4,
+                "jimbo",
+                true,
+                Timestamp(2024, 10, 12, 09, 05, 15)
+            ),
+        ],
+    )
+    .unwrap();
+    df.iter_sql("my_table", 3)
+        .enumerate()
+        .for_each(|(i, (query, args))| {
+            match i {
+                0 => {
+                    assert_eq!(query, "INSERT INTO `my_table` (`strings`, `nums`, `more_strings`, `bools`, `times`)\nVALUES\n\t(?, 0, ?, true, '2024-10-08 12:00:00'),\n\t(?, 1, ?, true, '2022-08-02 02:10:55'),\n\t(?, 2, ?, true, '2021-01-08 12:30:20');");
+                    assert_eq!(args, vec!["sugar".to_string(), "bobbyboy".to_string(), "sweets".to_string(), "dan".to_string(), "candy pop".to_string(), "randal".to_string()]);
+                },
+                _ => {
+                    assert_eq!(query, "INSERT INTO `my_table` (`strings`, `nums`, `more_strings`, `bools`, `times`)\nVALUES\n\t(?, 3, ?, true, '2023-10-06 14:10:20'),\n\t(?, 4, ?, true, '2024-10-12 09:05:15');");
+                    assert_eq!(args, vec!["caramel".to_string(), "jerry".to_string(), "chocolate".to_string(), "jimbo".to_string()]);
+                }
+            }
+        });
+}
+
+#[test]
 fn example() {
     example::example::main();
 }
