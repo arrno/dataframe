@@ -7,7 +7,7 @@ description = "A package for working with row/column/cell structured data AKA da
 repository = "https://github.com/arrno/dataframe"
 homepage = "https://rebug.dev"
 readme = "./readme.md"
-keywords = ["table", "cell", "column", "row", "dataframe"]
+keywords = ["dataframe", "csv", "sql", "table", "matrix"]
 license = "MIT"
 
 [lib]
@@ -20,7 +20,7 @@ repository = "https://github.com/arrno/dataframe"
 homepage = "https://rebug.dev"
 readme = "./readme.md"
 authors = ["Aaron <aaronhough@trapzd.com>"]
-keywords = ["table", "cell", "column", "row", "dataframe"]
+keywords = ["dataframe", "csv", "sql", "table", "matrix"]
 license = "MIT"
 
 
