@@ -2,6 +2,8 @@ use chrono::NaiveDateTime;
 use rowboat::dataframe::*;
 use serde::Deserialize;
 
+// Using rowboat to explore and transform a csv
+
 #[derive(Deserialize, ToRow)]
 struct Employee {
     id: u32,

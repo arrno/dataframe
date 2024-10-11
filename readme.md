@@ -540,5 +540,7 @@ df.iter_sql("my_table", 500).for_each(|(query, args)| {
     println!("{:?}", args);
 });
 ```
+DataSlice type also has a `to_sql` method.
+
 ## Examples
 For more examples, see `./tests/integration_test.rs`, `./tests/example/example.rs`, and `./tests/example/example_from_sql.rs`
