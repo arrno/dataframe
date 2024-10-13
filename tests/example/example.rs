@@ -26,6 +26,9 @@ pub fn main() {
     let mut dep_df = Dataframe::from_csv::<Department>("./tests/example/department.csv").unwrap();
     let mut emp_df = Dataframe::from_csv::<Employee>("./tests/example/employee.csv").unwrap();
 
+    // Describe the employee data
+    emp_df.describe().print();
+
     // Make date-time column from string timestamps
     emp_df
         .add_col(
