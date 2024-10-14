@@ -1,6 +1,6 @@
 [package]
 name = "rowboat"
-version = "0.0.7"
+version = "0.0.8"
 edition = "2021"
 authors = ["Aaron <aaronhough@trapzd.com>"]
 description = "A package for working with row/column/cell structured data AKA dataframe."
@@ -13,7 +13,7 @@ license = "MIT"
 [lib]
 name = "rowboat"
 path = "src/dataframe/lib.rs"
-version = "0.0.7"
+version = "0.0.8"
 edition = "2021"
 description = "A package for working with row/column/cell structured data AKA dataframe.."
 repository = "https://github.com/arrno/dataframe"
