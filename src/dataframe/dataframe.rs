@@ -23,7 +23,7 @@ use std::{
     fs::File,
 };
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Dataframe {
     title: String,
     columns: Vec<Col>,

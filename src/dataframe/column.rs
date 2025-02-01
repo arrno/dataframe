@@ -3,7 +3,7 @@ use crate::{cell::*, dataframe::Dataframe};
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Col {
     name: String,
     values: Vec<Cell>,
